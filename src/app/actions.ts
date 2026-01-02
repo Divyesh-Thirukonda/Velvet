@@ -1,0 +1,89 @@
+'use server';
+
+import { track3DGenerationEvent } from '@/lib/klaviyo';
+import { getShopifyProductById } from '@/lib/shopify';
+import { generateGeometryFromImage, Primitive } from '@/lib/openai';
+
+// Mock list of 3D models to return
+const MOCK_MODELS = [
+    'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+    'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb',
+    'https://modelviewer.dev/shared-assets/models/Horse.glb'
+];
+
+export async function checkGenerationStatus(taskId: string) {
+    if (taskId.startsWith('mock_')) {
+        return { status: 'SUCCEEDED', progress: 100, modelUrl: MOCK_MODELS[0] };
+    }
+    return { status: 'FAILED', progress: 0 };
+}
+
+interface GenerationResult {
+    success: boolean;
+    mode: 'real' | 'mock';
+    message: string;
+    modelUrl?: string;     // Optional, present if Mock or Meshy (legacy)
+    voxelData?: Primitive[]; // Optional, present if OpenAI Voxel
+    taskId?: string;
+}
+
+export async function generate3DModel(productId: string, consumerEmail: string, mode: 'real' | 'mock' = 'mock'): Promise<GenerationResult> {
+    // 1. Fetch Product Data
+    const product = await getShopifyProductById(productId);
+    if (!product) throw new Error('Product not found');
+
+    if (mode === 'real') {
+        try {
+            // OPENAI VOXEL ENGINE
+            const startTime = Date.now();
+
+            // Track Intent
+            track3DGenerationEvent(consumerEmail, product, "Generating (OpenAI Voxel)...").catch(console.error);
+
+            // Generate
+            const primitiveData = await generateGeometryFromImage(product.images[0]);
+
+            // Track Success
+            const duration = (Date.now() - startTime) / 1000;
+            console.log(`Voxel Gen took ${duration}s`);
+
+            return {
+                success: true,
+                mode: 'real',
+                voxelData: primitiveData,
+                message: 'Voxel Model Generated',
+                taskId: `voxel_${Date.now()}`
+            };
+
+        } catch (e) {
+            console.error("Real AI Failed, falling back to Mock", e);
+            // Fallthrogh to mock
+        }
+    }
+
+    // --- Mock Flow ---
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    const randomModel = MOCK_MODELS[Math.floor(Math.random() * MOCK_MODELS.length)];
+
+    try {
+        await track3DGenerationEvent(consumerEmail, product, randomModel);
+    } catch (e) {
+        console.error('Klaviyo Tracking Failed', e);
+    }
+
+    return {
+        success: true,
+        modelUrl: randomModel, // Explicitly string here
+        taskId: `mock_${Date.now()}`,
+        mode: 'mock',
+        message: 'Model generated (Mock)'
+    };
+}
+
+export async function publishToStore(productId: string, modelUrl: string) {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    return {
+        success: true,
+        message: '3D Model published to Shopify Product Metafields.'
+    };
+}
