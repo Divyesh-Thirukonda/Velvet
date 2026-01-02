@@ -106,7 +106,7 @@ export default function ProductPage() {
                 </div>
 
                 {/* 2. DETAILS COLUMN */}
-                <div className="space-y-6">
+                <div className="w-full md:w-1/2 space-y-6">
                     <div>
                         <div className="text-xs font-mono text-muted-foreground mb-2">ID: {product.id}</div>
                         <h1 className="text-3xl font-bold mb-2">{product.title}</h1>

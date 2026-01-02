@@ -1,11 +1,48 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--card-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+/* Custom Utilities */
+@utility container {
+  max-width: 1000px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
 
 :root {
-  /* Clean Industrial Palette (Vercel-inspired) */
+  /* Clean Industrial Palette */
   --background: #000000;
   --foreground: #ffffff;
 
@@ -28,107 +65,40 @@
   --accent: #333333;
   --accent-foreground: #ffffff;
 
-  --radius: 6px;
-}
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
 
-* {
-  box-sizing: border-box;
+  --radius: 6px;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  margin: 0;
-  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
-  line-height: 1.5;
 }
 
-/* Headings */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  margin: 0;
-}
-
-/* Utility Classes */
-.container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-/* CARDS: Simple, Solid, High Contrast */
+/* Global Component Styles */
 .glass-panel {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--card-foreground);
-  transition: border-color 0.2s;
+  @apply bg-card border border-border rounded-lg text-card-foreground transition-colors duration-200;
 }
 
 .glass-panel:hover {
-  border-color: #666666;
+  @apply border-muted-foreground/50;
 }
 
-/* TEXT */
-.text-muted-foreground {
-  color: var(--muted-foreground);
-}
-
-.font-mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-/* BUTTONS */
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  font-weight: 500;
-  height: 2.5rem;
-  padding: 0 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid transparent;
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 cursor-pointer transition-colors border border-transparent;
 }
 
 .btn-primary {
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.btn-primary:hover {
-  background-color: #e5e5e5;
+  @apply bg-primary text-primary-foreground hover:bg-primary/90;
 }
 
 .btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  @apply opacity-50 cursor-not-allowed;
 }
 
-/* INPUTS */
 .input {
-  display: flex;
-  height: 2.5rem;
-  width: 100%;
-  border-radius: var(--radius);
-  border: 1px solid var(--input);
-  background-color: transparent;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  color: var(--foreground);
-}
-
-.input:focus {
-  outline: none;
-  border-color: var(--ring);
+  @apply flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring;
 }
