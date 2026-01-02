@@ -1,6 +1,6 @@
 // src/lib/klaviyo.ts
 
-const KLAVIYO_PRIVATE_KEY = process.env.NEXT_PUBLIC_KLAVIYO_PRIVATE_KEY || 'pk_mock_key';
+const KLAVIYO_PRIVATE_KEY = process.env.NEXT_PUBLIC_KLAVIYO_PRIVATE_KEY;
 const KLAVIYO_REVISION = '2025-01-15'; // Always pin to a specific revision
 
 export async function track3DGenerationEvent(email: string, product: any, modelUrl: string) {

@@ -13,7 +13,7 @@ export default async function CampaignsPage() {
 
     // Mocking derived stats for now (as we can't fetch email open rates easily without more permissions/time)
     // But "Generated 3D Model" is REAL.
-    const recoveryRate = totalGenerated > 0 ? '18%' : '0%';
+    const recoveryRate = 'N/A';
 
     return (
         <div className="space-y-8">

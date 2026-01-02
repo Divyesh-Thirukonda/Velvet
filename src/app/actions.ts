@@ -33,32 +33,26 @@ export async function generate3DModel(productId: string, consumerEmail: string, 
     if (!product) throw new Error('Product not found');
 
     if (mode === 'real') {
-        try {
-            // OPENAI VOXEL ENGINE
-            const startTime = Date.now();
+        // OPENAI VOXEL ENGINE
+        const startTime = Date.now();
 
-            // Track Intent
-            track3DGenerationEvent(consumerEmail, product, "Generating (OpenAI Voxel)...").catch(console.error);
+        // Track Intent
+        track3DGenerationEvent(consumerEmail, product, "Generating (OpenAI Voxel)...").catch(console.error);
 
-            // Generate
-            const primitiveData = await generateGeometryFromImage(product.images[0]);
+        // Generate
+        const primitiveData = await generateGeometryFromImage(product.images[0]);
 
-            // Track Success
-            const duration = (Date.now() - startTime) / 1000;
-            console.log(`Voxel Gen took ${duration}s`);
+        // Track Success
+        const duration = (Date.now() - startTime) / 1000;
+        console.log(`Voxel Gen took ${duration}s`);
 
-            return {
-                success: true,
-                mode: 'real',
-                voxelData: primitiveData,
-                message: 'Voxel Model Generated',
-                taskId: `voxel_${Date.now()}`
-            };
-
-        } catch (e) {
-            console.error("Real AI Failed, falling back to Mock", e);
-            // Fallthrogh to mock
-        }
+        return {
+            success: true,
+            mode: 'real',
+            voxelData: primitiveData,
+            message: 'Voxel Model Generated',
+            taskId: `voxel_${Date.now()}`
+        };
     }
 
     // --- Mock Flow ---

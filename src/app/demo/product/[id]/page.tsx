@@ -4,16 +4,25 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, CheckCircle2, Box, Send } from 'lucide-react';
-import { generate3DModel } from '@/app/actions';
+import { ArrowLeft, Loader2, CheckCircle2, Box, Send, AlertTriangle, Globe, Mail, Users, Zap } from 'lucide-react';
+import { generate3DModel, publishToStore } from '@/app/actions';
 import { Product, getShopifyProducts } from '@/lib/shopify';
 
 export default function DemoProductPage() {
     const params = useParams();
     const [product, setProduct] = useState<Product | null>(null);
-    const [email, setEmail] = useState('demo@example.com');
-    const [status, setStatus] = useState<'idle' | 'generating' | 'complete'>('idle');
-    const [modelUrl, setModelUrl] = useState<string | null>(null);
+    const [status, setStatus] = useState<'idle' | 'generating' | 'complete' | 'failed'>('idle');
+    const [mockModelUrl, setMockModelUrl] = useState<string | null>(null);
+
+    // Publishing State
+    const [isPublishing, setIsPublishing] = useState(false);
+    const [isPublished, setIsPublished] = useState(false);
+
+    // Campaign State
+    const [targetSegment, setTargetSegment] = useState('Lost Customers (30 Days)');
+    const [customEmail, setCustomEmail] = useState('');
+    const [isSending, setIsSending] = useState(false);
+    const [isSent, setIsSent] = useState(false);
 
     useEffect(() => {
         getShopifyProducts().then(products => {
@@ -25,96 +34,184 @@ export default function DemoProductPage() {
     const handleGenerate = async () => {
         if (!product) return;
         setStatus('generating');
-
         try {
-            // Explicitly force 'mock' mode
-            const result = await generate3DModel(product.id, email, 'mock');
-
-            // STRICT NULL CHECK
+            // Force mock mode
+            const result = await generate3DModel(product.id, 'demo-user', 'mock');
             if (result.success && result.modelUrl) {
-                setModelUrl(result.modelUrl as string);
+                setMockModelUrl(result.modelUrl);
                 setStatus('complete');
+            } else {
+                setStatus('failed');
             }
         } catch (e) {
             console.error(e);
-            setStatus('idle');
+            setStatus('failed');
         }
     };
 
-    if (!product) return <div className="text-center py-20 text-muted-foreground">Loading Demo Product...</div>;
+    const handlePublish = async () => {
+        if (!product) return;
+        setIsPublishing(true);
+        await publishToStore(product.id, 'mock-asset-url');
+        setIsPublishing(false);
+        setIsPublished(true);
+    };
+
+    const handleSendCampaign = async () => {
+        setIsSending(true);
+        // Simulate sending
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await generate3DModel(product!.id, customEmail || 'demo-segment', 'mock');
+        setIsSending(false);
+        setIsSent(true);
+    };
+
+    if (!product) return <div className="text-center py-20 text-muted-foreground">Loading Demo...</div>;
 
     return (
-        <div className="max-w-5xl mx-auto">
-            <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors">
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
+        <div className="max-w-6xl mx-auto py-8">
+            <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-white mb-8">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Products
             </Link>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                {/* Visual Side */}
-                <div className="space-y-6">
-                    <div className="aspect-square rounded-2xl bg-secondary/50 border border-white/5 overflow-hidden relative group">
-                        {status === 'complete' && modelUrl ? (
+            <div className="flex flex-col md:flex-row gap-12 items-start">
+
+                {/* 1. VISUAL COLUMN (Left) */}
+                <div className="w-full md:w-3/5 space-y-4">
+                    <div className="aspect-[4/3] bg-[#111] border border-[#333] rounded-lg overflow-hidden relative group">
+                        <div className="absolute top-4 left-4 z-20 px-2 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded text-xs font-mono font-bold flex items-center gap-2">
+                            <Zap className="w-3 h-3 fill-current" /> DEMO MODE
+                        </div>
+
+                        {status === 'complete' ? (
                             <div className="w-full h-full flex items-center justify-center bg-black/20">
                                 <div className="text-center space-y-4 animate-in fade-in zoom-in duration-500">
-                                    <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(34,197,94,0.3)]">
-                                        <Box className="w-10 h-10 text-primary" />
+                                    <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                                        <Box className="w-10 h-10 text-white" />
                                     </div>
-                                    <p className="text-primary font-medium">Interactive 3D Ready (Mock)</p>
+                                    <p className="text-white font-medium">Interactive 3D Ready (Mock)</p>
                                 </div>
+                            </div>
+                        ) : status === 'failed' ? (
+                            <div className="w-full h-full flex items-center justify-center text-red-500">
+                                <AlertTriangle className="w-8 h-8" />
                             </div>
                         ) : (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                                 src={product.images[0]}
                                 alt={product.title}
-                                className={`w-full h-full object-cover transition-all duration-700 ${status === 'generating' ? 'scale-110 blur-sm opacity-50' : ''}`}
+                                className={`w-full h-full object-cover ${status === 'generating' ? 'opacity-50 blur-sm scale-110' : ''} transition-all duration-700`}
                             />
                         )}
 
+                        {/* Status Overlay */}
                         {status === 'generating' && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-                                <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-                                <p className="text-lg font-medium glow-text">Simulating Scan...</p>
-                                <p className="text-sm text-muted-foreground">Instant Demo Mode</p>
+                                <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
+                                <p className="text-sm font-medium">Simulating Voxelization...</p>
+                                <p className="text-xs text-muted-foreground">Instant Demo</p>
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Controls Side */}
-                <div className="flex flex-col justify-center space-y-8">
+                {/* 2. ACTIONS COLUMN (Right) */}
+                <div className="w-full md:w-2/5 space-y-8">
                     <div>
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">DEMO MODE</span>
-                            <h2 className="text-primary font-mono text-sm">SKU: {product.id}</h2>
-                        </div>
-                        <h1 className="text-4xl font-bold mb-4">{product.title}</h1>
+                        <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
+                        <p className="text-muted-foreground text-sm leading-relaxed">{product.description}</p>
                     </div>
 
-                    <div className="glass-panel p-6 space-y-6 bg-secondary/10">
-                        {status === 'complete' ? (
-                            <div className="space-y-4">
-                                <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-3 text-primary">
-                                    <CheckCircle2 className="w-5 h-5" />
-                                    <span className="font-medium">Assets Ready</span>
-                                </div>
-                            </div>
-                        ) : (
+                    {status !== 'complete' ? (
+                        <div className="p-6 border border-[#333] rounded-lg bg-[#0a0a0a]">
+                            <h3 className="font-semibold mb-4">Step 1: Generate Asset</h3>
+                            <p className="text-xs text-muted-foreground mb-4">
+                                Create a 3D Voxel representation (Simulated).
+                            </p>
                             <button
                                 onClick={handleGenerate}
-                                disabled={status !== 'idle'}
-                                className="btn btn-primary w-full text-lg py-4 shadow-[0_0_20px_rgba(34,197,94,0.15)]"
+                                disabled={status === 'generating'}
+                                className="btn btn-primary w-full gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
                             >
-                                <Box className="w-5 h-5 mr-2" />
-                                {status === 'generating' ? 'Simulating...' : 'Instant Generate (Mock)'}
+                                <Box className="w-4 h-4" />
+                                {status === 'generating' ? 'Processing...' : 'Instant Generate'}
                             </button>
-                        )}
-                        <div className="pt-4 border-t border-white/5 text-center">
-                            <Link href={`/product/${product.id}`} className="text-xs text-muted-foreground hover:text-primary transition-colors">
-                                Switch to Real AI Mode →
-                            </Link>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+                            {/* Publishing Card */}
+                            <div className="p-5 border border-[#333] rounded-lg bg-[#0a0a0a]">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Globe className="w-4 h-4 text-white" />
+                                    <h3 className="font-semibold text-sm">Step 2: Storefront</h3>
+                                </div>
+                                <p className="text-xs text-muted-foreground mb-4">
+                                    Publish this asset to Shopify Product Metafields.
+                                </p>
+                                <button
+                                    onClick={handlePublish}
+                                    disabled={isPublished || isPublishing}
+                                    className={`btn w-full gap-2 ${isPublished ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'btn-primary'}`}
+                                >
+                                    {isPublished ? (
+                                        <> <CheckCircle2 className="w-4 h-4" /> Published </>
+                                    ) : (
+                                        <> {isPublishing ? 'Publishing...' : 'Publish to Store'} </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* Campaign Card */}
+                            <div className="p-5 border border-[#333] rounded-lg bg-[#0a0a0a]">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Mail className="w-4 h-4 text-white" />
+                                    <h3 className="font-semibold text-sm">Step 3: Campaign</h3>
+                                </div>
+
+                                <div className="space-y-3 mb-4">
+                                    <label className="text-xs font-medium text-muted-foreground block">Target Audience</label>
+                                    <div className="relative">
+                                        <Users className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+                                        <select
+                                            value={targetSegment}
+                                            onChange={(e) => setTargetSegment(e.target.value)}
+                                            className="input pl-9"
+                                        >
+                                            <option>Lost Customers (30 Days)</option>
+                                            <option>Cart Abandoners (High Value)</option>
+                                            <option>VIP Loyalty Members</option>
+                                            <option>Specific Email (Test)</option>
+                                        </select>
+                                    </div>
+
+                                    {targetSegment === 'Specific Email (Test)' && (
+                                        <input
+                                            type="email"
+                                            placeholder="name@example.com"
+                                            value={customEmail}
+                                            onChange={(e) => setCustomEmail(e.target.value)}
+                                            className="input"
+                                        />
+                                    )}
+                                </div>
+
+                                <button
+                                    onClick={handleSendCampaign}
+                                    disabled={isSent || isSending}
+                                    className={`btn w-full gap-2 border border-[#333] hover:bg-white/5 ${isSent ? 'text-green-500 border-green-500/20' : ''}`}
+                                >
+                                    {isSent ? (
+                                        <> <CheckCircle2 className="w-4 h-4" /> Campaign Queued </>
+                                    ) : (
+                                        <> <Send className="w-4 h-4" /> {isSending ? 'Sending...' : 'Send to Segment'} </>
+                                    )}
+                                </button>
+                            </div>
+
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

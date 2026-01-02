@@ -4,10 +4,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, CheckCircle2, Box, Send, AlertTriangle, Layers } from 'lucide-react';
-import { generate3DModel } from '@/app/actions';
+import { ArrowLeft, Loader2, CheckCircle2, Box, Send, AlertTriangle, Globe, Mail, Users } from 'lucide-react';
+import { generate3DModel, publishToStore } from '@/app/actions';
 import { Product, getShopifyProducts } from '@/lib/shopify';
 import VoxelRenderer from '@/components/VoxelRenderer';
+
 // Type from lib/openai
 interface PrimitiveData {
     type: 'box' | 'sphere' | 'cylinder';
@@ -20,10 +21,19 @@ interface PrimitiveData {
 export default function ProductPage() {
     const params = useParams();
     const [product, setProduct] = useState<Product | null>(null);
-    const [email, setEmail] = useState('demo@example.com');
     const [status, setStatus] = useState<'idle' | 'generating' | 'complete' | 'failed'>('idle');
     const [voxelData, setVoxelData] = useState<PrimitiveData[] | null>(null);
     const [mockModelUrl, setMockModelUrl] = useState<string | null>(null);
+
+    // Publishing State
+    const [isPublishing, setIsPublishing] = useState(false);
+    const [isPublished, setIsPublished] = useState(false);
+
+    // Campaign State
+    const [targetSegment, setTargetSegment] = useState('Lost Customers (30 Days)');
+    const [customEmail, setCustomEmail] = useState('');
+    const [isSending, setIsSending] = useState(false);
+    const [isSent, setIsSent] = useState(false);
 
     useEffect(() => {
         getShopifyProducts().then(products => {
@@ -35,17 +45,12 @@ export default function ProductPage() {
     const handleGenerate = async () => {
         if (!product) return;
         setStatus('generating');
-
         try {
-            // mode='real' triggers the OpenAI Voxel flow
-            const result = await generate3DModel(product.id, email, 'real');
-
+            const result = await generate3DModel(product.id, 'system-init', 'real');
             if (result.success && result.voxelData) {
-                // Real OpenAI Result
                 setVoxelData(result.voxelData);
                 setStatus('complete');
             } else if (result.success && result.modelUrl) {
-                // Mock Fallback
                 setMockModelUrl(result.modelUrl);
                 setStatus('complete');
             } else {
@@ -57,22 +62,43 @@ export default function ProductPage() {
         }
     };
 
+    const handlePublish = async () => {
+        if (!product) return;
+        setIsPublishing(true);
+        // Simulate publishing
+        await publishToStore(product.id, 'voxel-asset-url');
+        setIsPublishing(false);
+        setIsPublished(true);
+    };
+
+    const handleSendCampaign = async () => {
+        // In a real app, this would trigger a Klaviyo Flow to the segment
+        // For now, we simulate sending to the specified email or segment
+        setIsSending(true);
+        // Reuse generate3DModel to trigger the track event for the specific user/segment
+        // (This effectively adds them to the flow in Klaviyo if configured)
+        const emailTarget = customEmail || 'segment-sample@example.com';
+        await generate3DModel(product!.id, emailTarget, 'mock');
+        setIsSending(false);
+        setIsSent(true);
+    };
+
     if (!product) return <div className="text-center py-20 text-muted-foreground">Loading...</div>;
 
     const isVoxel = status === 'complete' && voxelData;
     const isMock = status === 'complete' && mockModelUrl;
 
     return (
-        <div className="max-w-4xl mx-auto py-8">
+        <div className="max-w-6xl mx-auto py-8">
             <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-white mb-8">
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Products
             </Link>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+            <div className="flex flex-col md:flex-row gap-12 items-start">
 
-                {/* 1. VISUAL COLUMN */}
-                <div className="space-y-4">
-                    <div className="aspect-square bg-[#111] border border-[#333] rounded-lg overflow-hidden relative">
+                {/* 1. VISUAL COLUMN (Left) */}
+                <div className="w-full md:w-3/5 space-y-4">
+                    <div className="aspect-[4/3] bg-[#111] border border-[#333] rounded-lg overflow-hidden relative">
                         {isVoxel ? (
                             <div className="w-full h-full">
                                 <VoxelRenderer key={JSON.stringify(voxelData)} data={voxelData || []} />
@@ -98,59 +124,109 @@ export default function ProductPage() {
                         {status === 'generating' && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
                                 <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
-                                <p className="text-sm font-medium">Reconstructing...</p>
+                                <p className="text-sm font-medium">Reconstructing Geometry...</p>
+                                <p className="text-xs text-muted-foreground">GPT-4o Vision Processing</p>
                             </div>
                         )}
                     </div>
-                    {isVoxel && <div className="text-center text-xs text-muted-foreground">Powered by GPT-4o Vision</div>}
                 </div>
 
-                {/* 2. DETAILS COLUMN */}
-                <div className="w-full md:w-1/2 space-y-6">
+                {/* 2. ACTIONS COLUMN (Right) */}
+                <div className="w-full md:w-2/5 space-y-8">
                     <div>
-                        <div className="text-xs font-mono text-muted-foreground mb-2">ID: {product.id}</div>
                         <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
-                        <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+                        <p className="text-muted-foreground text-sm leading-relaxed">{product.description}</p>
                     </div>
 
-                    <div className="p-6 border border-[#333] rounded-lg bg-[#0a0a0a] space-y-4">
-                        <div className="space-y-2">
-                            <label className="text-xs font-medium uppercase text-muted-foreground">Target Email</label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="input"
-                                placeholder="name@example.com"
-                            />
-                        </div>
-
-                        {status === 'complete' ? (
-                            <div className="space-y-3">
-                                <div className="p-3 bg-green-500/10 border border-green-500/20 rounded flex items-center gap-2 text-green-500 text-sm">
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    <span>Model Ready</span>
-                                </div>
-                                <button className="btn btn-primary w-full gap-2">
-                                    <Send className="w-4 h-4" /> Publish to Store
-                                </button>
-                            </div>
-                        ) : (
+                    {status !== 'complete' ? (
+                        <div className="p-6 border border-[#333] rounded-lg bg-[#0a0a0a]">
+                            <h3 className="font-semibold mb-4">Step 1: Generate Asset</h3>
+                            <p className="text-xs text-muted-foreground mb-4">
+                                Create a 3D Voxel representation using OpenAI Vision.
+                            </p>
                             <button
                                 onClick={handleGenerate}
-                                disabled={status !== 'idle'}
-                                className="btn btn-primary w-full"
+                                disabled={status === 'generating'}
+                                className="btn btn-primary w-full gap-2"
                             >
-                                {status === 'generating' ? 'Processing...' : 'Generate 3D Asset'}
+                                <Box className="w-4 h-4" />
+                                {status === 'generating' ? 'Analyzing...' : 'Generate 3D Model'}
                             </button>
-                        )}
-
-                        <div className="text-center pt-2">
-                            <Link href={`/demo/product/${product.id}`} className="text-xs text-muted-foreground hover:text-white underline">
-                                Switch to Demo Mode
-                            </Link>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+                            {/* Publishing Card */}
+                            <div className="p-5 border border-[#333] rounded-lg bg-[#0a0a0a]">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Globe className="w-4 h-4 text-white" />
+                                    <h3 className="font-semibold text-sm">Step 2: Storefront</h3>
+                                </div>
+                                <p className="text-xs text-muted-foreground mb-4">
+                                    Publish this asset to Shopify Product Metafields for AR viewing.
+                                </p>
+                                <button
+                                    onClick={handlePublish}
+                                    disabled={isPublished || isPublishing}
+                                    className={`btn w-full gap-2 ${isPublished ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'btn-primary'}`}
+                                >
+                                    {isPublished ? (
+                                        <> <CheckCircle2 className="w-4 h-4" /> Published </>
+                                    ) : (
+                                        <> {isPublishing ? 'Publishing...' : 'Publish to Store'} </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* Campaign Card */}
+                            <div className="p-5 border border-[#333] rounded-lg bg-[#0a0a0a]">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Mail className="w-4 h-4 text-white" />
+                                    <h3 className="font-semibold text-sm">Step 3: Campaign</h3>
+                                </div>
+
+                                <div className="space-y-3 mb-4">
+                                    <label className="text-xs font-medium text-muted-foreground block">Target Audience</label>
+                                    <div className="relative">
+                                        <Users className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+                                        <select
+                                            value={targetSegment}
+                                            onChange={(e) => setTargetSegment(e.target.value)}
+                                            className="input pl-9"
+                                        >
+                                            <option>Lost Customers (30 Days)</option>
+                                            <option>Cart Abandoners (High Value)</option>
+                                            <option>VIP Loyalty Members</option>
+                                            <option>Specific Email (Test)</option>
+                                        </select>
+                                    </div>
+
+                                    {targetSegment === 'Specific Email (Test)' && (
+                                        <input
+                                            type="email"
+                                            placeholder="name@example.com"
+                                            value={customEmail}
+                                            onChange={(e) => setCustomEmail(e.target.value)}
+                                            className="input"
+                                        />
+                                    )}
+                                </div>
+
+                                <button
+                                    onClick={handleSendCampaign}
+                                    disabled={isSent || isSending}
+                                    className={`btn w-full gap-2 border border-[#333] hover:bg-white/5 ${isSent ? 'text-green-500 border-green-500/20' : ''}`}
+                                >
+                                    {isSent ? (
+                                        <> <CheckCircle2 className="w-4 h-4" /> Campaign Queued </>
+                                    ) : (
+                                        <> <Send className="w-4 h-4" /> {isSending ? 'Sending...' : 'Send to Segment'} </>
+                                    )}
+                                </button>
+                            </div>
+
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
