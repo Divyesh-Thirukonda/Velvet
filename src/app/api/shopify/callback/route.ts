@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
     // Exchange Code for Access Token
     try {
-        const response = await fetch(`https://${shop}/admin/oauth/access_token`, {
+        const tokenResponse = await fetch(`https://${shop}/admin/oauth/access_token`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -46,19 +46,18 @@ export async function GET(request: NextRequest) {
             }),
         });
 
-        const data = await response.json();
+        const data = await tokenResponse.json();
 
         if (!data.access_token) {
             throw new Error('No access token received');
         }
 
-        // Save to cookies (Hybrid approach)
-        const cookieStore = cookies();
-        cookieStore.set('shopify_domain', shop);
-        cookieStore.set('shopify_token', data.access_token);
+        // Redirect to Dashboard with Cookies
+        const response = NextResponse.redirect(new URL('/', request.url));
+        response.cookies.set('shopify_domain', shop);
+        response.cookies.set('shopify_token', data.access_token);
 
-        // Redirect to Dashboard
-        return NextResponse.redirect(new URL('/', request.url));
+        return response;
 
     } catch (error) {
         console.error('OAuth Error:', error);
