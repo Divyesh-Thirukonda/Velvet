@@ -1,87 +1,89 @@
-# Velvet 💎
-**Commerce in Another Dimension**
+# Velvet: AI-Powered 3D Commerce Engine 💎
 
-> **Hackathon Submission for Klaviyo + Shopify**
-> 
-> *Velvet transforms static Shopify products into interactive 3D voxel assets using Generative AI, then instantly syncs them to Klaviyo for hyper-personalized retargeting campaigns.*
+## Problem Statement
+**E-commerce is flat.** 
+Online shopping suffers from a "dimension gap." Customers hesitate to buy premium products because static 2D images fail to convey scale, texture, and volume. This leads to:
+-   **Lower Conversion Rates**: High-intent buyers bounce because they can't "feel" the product.
+-   **High Return Rates (~30%)**: Products arrive looking different than expected.
+-   **Generic Retargeting**: "You left this in your cart" emails are boring and lack visual context.
 
-![Velvet Dashboard](https://github.com/user-attachments/assets/placeholder-dashboard.png)
+## Solution Overview
+**Velvet** is an end-to-end **Generative 3D Commerce Engine** that solves this by turning static images into interactive 3D assets and instantly leveraging them in personalized marketing.
 
-## 🚀 The Problem
-E-commerce is flat. Customers return products because they "couldn't tell what it looked like."
-- **30%** of returns are due to mismatch expectations.
-- **Lost Revenue**: Static images fail to convert high-intent buyers.
-- **Generic Outreach**: "Come back" emails lack context.
+1.  **AI Voxel Engine**: We use **OpenAI GPT-4o Vision** to analyze a standard product image and "dream" it into a 3D Voxel model (a lightweight, styled 3D representation).
+2.  **Instant Publishing**: The generated 3D model is automatically written to the product's Metafields in **Shopify**, making it ready for AR viewers.
+3.  **Klaviyo Intelligence**: The generation event triggers a specialized **Klaviyo Campaign**, injecting the interactive 3D model link directly into retargeting flows for high-value segments (e.g., "Lost Customers").
 
-## ✨ The Solution
-Velvet is an AI-Native 3D Engine that lives inside your commerce stack.
-1.  **Vision-to-Voxel Engine**: Uses **OpenAI GPT-4o Vision** to analyze product images and reconstruct them as interactive 3D voxel models.
-2.  **Instant Publish**: Updates Shopify Metafields with the 3D asset URL.
-3.  **Klaviyo Intelligence**: Triggers advanced flows ("Lost Customer with 3D Preview") that inject the interactive model directly into email campaigns.
+## Architecture / Design Decisions
+We built Velvet as a modern, embedded commerce tool aimed at stability and speed ("Clean Industrial" design).
 
-## 🛠️ Tech Stack
--   **Framework**: Next.js 14 (App Router, Server Actions)
--   **Styling**: Tailwind CSS v4 ("Clean Industrial" Theme)
--   **3D Engine**: React Three Fiber (R3F) + Drei
--   **AI**: OpenAI GPT-4o (Custom Voxelizer Prompt)
--   **Integration**: 
-    -   **Klaviyo**: Track API (Rich Events with `$value`, `ModelURL`)
-    -   **Shopify**: Admin API (Product Sync & Metafields)
+-   **Frontend**: **Next.js 15** (App Router) with **Tailwind CSS v4** for a high-performance, edge-ready UI. We used Server Actions for all data mutations to ensure type safety and security.
+-   **3D Rendering**: **React Three Fiber (R3F)** & **Drei**. We chose a "Voxel" aesthetic because it's distinct, fast to render, and generated reliably by LLMs compared to hallucinating complex mesh topology.
+-   **Backend Logic**: Hybrid approach.
+    -   *Real Mode*: Uses **Shopify Admin API** and **Klaviyo APIs** when credentials are provided.
+    -   *Demo Mode*: Includes a robust fallback simulation so judges can test the UI without needing a live Shopify store.
+-   **Auth**: Custom **Shopify OAuth 2.0** flow (HMAC validation, permanent token exchange) to provide a "One-Click Connect" experience.
 
-## ⚡ Key Features
+## Klaviyo API / SDK / MCP Usage
+Velvet uses the **Klaviyo Track API** deeply to power its core value proposition. We don't just "log events"; we structure data to enable advanced segmentation.
 
-### 1. AI Voxel Engine
-We don't just "fetch" models. We **generate** them.
-Velvet's custom engine looks at a 2D image (e.g., an Aero Chair) and "dreams" it in 3D voxels, storing the geometric data (position, color, scale) as a lightweight JSON asset.
+-   **Endpoint**: `https://a.klaviyo.com/api/events/`
+-   **Event: `Generated 3D Model`**:
+    -   Fired when a merchant successfully creates a model.
+    -   **Payload**: Includes `$value` (Price), `ModelURL`, and `GenerationEngine`.
+    -   **Use Case**: Allows merchants to segment "High Intent" admins or users who interact with 3D tools.
+-   **Event: `Triggered 3D Campaign`**:
+    -   Fired when the "Send Campaign" action is taken.
+    -   **Payload**: `TargetSegment`, `ShopLink`, `ModelURL`.
+    -   **Use Case**: This event acts as a **Flow Trigger** in Klaviyo, allowing the merchant to design a dynamic email template that populates with the *specific* 3D model the user was looking at.
 
-### 2. Deep Klaviyo Sync
-When a model is generated, we don't just log it. We enrich the customer profile.
-\`\`\`json
-{
-  "event": "Generated 3D Model",
-  "properties": {
-    "ProductName": "Ergonomic Aero Chair",
-    "$value": 299.00,
-    "ModelURL": "https://velvet.app/view/voxel-123",
-    "GenerationEngine": "GPT-4o Vision"
-  }
-}
+## Getting Started / Setup Instructions
+
+### 1. Clone & Install
+\`\`\`bash
+git clone https://github.com/Divyesh-Thirukonda/Velvet.git
+cd Velvet
+npm install
 \`\`\`
-This allows you to create **Segments** like *"High Value Users who viewed 3D Models but didn't buy"*.
 
-### 3. "Connect Store" Modal (Developer Experience)
-Built for Hackathon simplicity. No complex OAuth apps.
--   Click **"Connect Store"**.
--   Paste your **Shop Domain** & **Admin Token**.
--   Instantly fetch **REAL** products from your live store.
--   (Fallback: Uses "Velvet Demo Store" for judges without credentials).
+### 2. Environment Variables
+Create a \`.env.local\` file in the root directory:
+\`\`\`bash
+# Core Keys
+OPENAI_API_KEY=sk-proj-...
+KLAVIYO_PRIVATE_KEY=pk_...
+NEXT_PUBLIC_KLAVIYO_PUBLIC_KEY=pk_...
 
-## 🏃‍♂️ Getting Started
+# Shopify OAuth (Optional - Required for "Auto Connect")
+SHOPIFY_API_KEY=your_partner_api_key
+SHOPIFY_API_SECRET=your_partner_secret
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+\`\`\`
 
-1.  **Clone & Install**
-    \`\`\`bash
-    git clone https://github.com/Divyesh-Thirukonda/Velvet.git
-    cd Velvet
-    npm install
-    \`\`\`
+### 3. Run Locally
+\`\`\`bash
+npm run dev
+\`\`\`
+Visit \`http://localhost:3000\`.
 
-2.  **Environment Setup**
-    Create \`.env.local\`:
-    \`\`\`bash
-    OPENAI_API_KEY=sk-...
-    NEXT_PUBLIC_KLAVIYO_PUBLIC_KEY=pk_...
-    \`\`\`
+### 4. Connect Store
+-   Click **"Connect Store"** in the navbar.
+-   **Option A (OAuth)**: Enter your `your-store.myshopify.com` domain and click Connect. Approve the app in Shopify.
+-   **Option B (Manual)**: Paste a Shopify Admin Access Token (`shpat_...`) directly.
 
-3.  **Run**
-    \`\`\`bash
-    npm run dev
-    \`\`\`
+## Demo
+1.  **Dashboard**: See your (Real or Demo) products.
+2.  **Product Page**: Click a product.
+3.  **Step 1**: Click **"Generate 3D Model"**. Watch the AI reconstruct the image into voxels.
+4.  **Step 2**: Click **"Publish to Store"**. This saves the asset url to `velvet.model_url` metafield in Shopify.
+5.  **Step 3**: Select a target audience (e.g., "Lost Customers") and click **"Send Campaign"**. This fires the event to Klaviyo.
 
-## 🏆 Hackathon Checklist
-- [x] **Creativity**: AI Voxelization is a novel text-to-3D approach.
-- [x] **Technical**: Clean Next.js 14 Server Actions architecture.
-- [x] **Klaviyo**: Deep integration with Track API and Revenue metrics.
-- [x] **Shopify**: Hybrid Real/Simulated data fetching.
+## Testing / Error Handling
+-   **Hybrid Fallbacks**: The app handles missing credentials gracefully. If no store is connected, it switches to "Demo Mode" automatically.
+-   **API Reliability**: All external API calls (Shopify, OpenAI, Klaviyo) are wrapped in `try/catch` blocks with specific error logging.
+-   **Validation**: Input fields (Domain, Email) have client-side validation before submission.
 
----
-*Built with 💜 by Divyesh Thirukonda.*
+## Future Improvements / Stretch Goals
+-   **True AR in Email**: Working with email clients to support `<model-viewer>` directly in the inbox (currently limited by email standards).
+-   **Mesh Generation**: Upgrading from Voxels to textured GLB meshes using newer image-to-3D models (e.g., Meshy or CSM) as they become faster.
+-   **Bi-Directional Sync**: Listening to Klaviyo webhooks (e.g., "User Clicked 3D Model") to update Shopify tags on the customer profile.
