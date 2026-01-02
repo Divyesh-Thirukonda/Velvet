@@ -1,7 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { cookies } from 'next/headers';
+
 import { fetchRealShopifyProducts, publishToRealShopifyMetafield } from '@/lib/shopify-real';
 
 import { track3DGenerationEvent, triggerCampaignEvent } from '@/lib/klaviyo';
@@ -79,7 +79,7 @@ export async function generate3DModel(productId: string, consumerEmail: string, 
 }
 
 export async function publishToStore(productId: string, modelUrl: string) {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const domain = cookieStore.get('shopify_domain')?.value;
     const token = cookieStore.get('shopify_token')?.value;
 

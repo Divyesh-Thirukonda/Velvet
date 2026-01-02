@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, Box, Zap, Globe, CheckCircle2 } from 'lucide-react';
 
 export default async function DashboardPage() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const shopifyDomain = cookieStore.get('shopify_domain')?.value;
   const shopifyToken = cookieStore.get('shopify_token')?.value;
 
