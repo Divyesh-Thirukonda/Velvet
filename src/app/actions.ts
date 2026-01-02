@@ -1,5 +1,8 @@
 'use server';
 
+import { cookies } from 'next/headers';
+import { fetchRealShopifyProducts } from '@/lib/shopify-real';
+
 import { track3DGenerationEvent } from '@/lib/klaviyo';
 import { getShopifyProductById } from '@/lib/shopify';
 import { generateGeometryFromImage, Primitive } from '@/lib/openai';

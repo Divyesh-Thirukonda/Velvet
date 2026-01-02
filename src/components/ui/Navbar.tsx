@@ -2,13 +2,28 @@
 'use client';
 
 import Link from 'next/link';
-import { Box, LayoutGrid, BarChart3, Plus } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { Box, LayoutGrid, BarChart3, Plus, LogOut } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import ConnectStoreModal from '../ConnectStoreModal';
+import { saveShopifyConfig, disconnectStore } from '@/app/actions';
 
 export default function Navbar() {
     const pathname = usePathname();
+    const router = useRouter();
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const isActive = (path: string) => pathname === path ? 'text-white' : 'text-[#888888] hover:text-white';
+
+    const handleConnect = async (domain: string, token: string) => {
+        await saveShopifyConfig(domain, token);
+        router.refresh(); // Refresh Server Components
+    };
+
+    const handleDisconnect = async () => {
+        await disconnectStore();
+        router.refresh();
+    };
 
     return (
         <nav className="border-b border-[#333333] bg-black">
@@ -28,9 +43,27 @@ export default function Navbar() {
                 </div>
 
                 {/* Actions */}
-                <button className="btn btn-primary h-8 text-xs">
-                    <Plus className="w-3.5 h-3.5 mr-1" /> Connect Store
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="btn btn-primary h-8 text-xs"
+                    >
+                        <Plus className="w-3.5 h-3.5 mr-1" /> Connect Store
+                    </button>
+                    <button
+                        onClick={handleDisconnect}
+                        className="btn h-8 text-xs bg-[#111] hover:bg-red-900/20 text-muted-foreground hover:text-red-500 border border-[#333]"
+                        title="Disconnect Store"
+                    >
+                        <LogOut className="w-3.5 h-3.5" />
+                    </button>
+                </div>
+
+                <ConnectStoreModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onConnect={handleConnect}
+                />
             </div>
         </nav>
     );

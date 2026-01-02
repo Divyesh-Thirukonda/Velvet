@@ -1,0 +1,102 @@
+// src/components/ConnectStoreModal.tsx
+'use client';
+
+import React, { useState } from 'react';
+import { X, CheckCircle2, AlertCircle, ShoppingBag, Key } from 'lucide-react';
+
+interface ConnectStoreModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onConnect: (domain: string, token: string) => void;
+}
+
+export default function ConnectStoreModal({ isOpen, onClose, onConnect }: ConnectStoreModalProps) {
+    const [domain, setDomain] = useState('');
+    const [token, setToken] = useState('');
+    const [error, setError] = useState('');
+
+    if (!isOpen) return null;
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+
+        if (!domain.includes('.myshopify.com')) {
+            setError('Domain must look like "your-store.myshopify.com"');
+            return;
+        }
+        if (!token.startsWith('shpat_')) {
+            setError('Access Token usually starts with "shpat_"');
+            return;
+        }
+
+        onConnect(domain, token);
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div className="w-full max-w-md p-6 bg-[#111] border border-[#333] rounded-lg shadow-2xl animate-in fade-in zoom-in duration-200">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                        <ShoppingBag className="w-5 h-5 text-white" />
+                        Connect Shopify Store
+                    </h2>
+                    <button onClick={onClose} className="text-muted-foreground hover:text-white">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground">Store Domain</label>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="brand-name.myshopify.com"
+                                value={domain}
+                                onChange={(e) => setDomain(e.target.value)}
+                                className="input pl-4"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground">Admin API Access Token</label>
+                        <div className="relative">
+                            <Key className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+                            <input
+                                type="password"
+                                placeholder="shpat_xxxxxxxxxxxxxxxx"
+                                value={token}
+                                onChange={(e) => setToken(e.target.value)}
+                                className="input pl-9"
+                                required
+                            />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">
+                            Found in Shopify Settings → Apps → Develop apps → API Credentials
+                        </p>
+                    </div>
+
+                    {error && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded flex items-center gap-2 text-red-500 text-xs">
+                            <AlertCircle className="w-4 h-4" />
+                            {error}
+                        </div>
+                    )}
+
+                    <div className="flex gap-3 pt-2">
+                        <button type="button" onClick={onClose} className="btn w-full bg-[#222] hover:bg-[#333]">
+                            Cancel
+                        </button>
+                        <button type="submit" className="btn btn-primary w-full">
+                            Connect Store
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}

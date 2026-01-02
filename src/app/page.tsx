@@ -1,17 +1,45 @@
 import { getShopifyProducts } from '@/lib/shopify';
+import { fetchRealShopifyProducts } from '@/lib/shopify-real';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
-import { ArrowRight, Box, Zap } from 'lucide-react';
+import { ArrowRight, Box, Zap, Globe, CheckCircle2 } from 'lucide-react';
 
 export default async function DashboardPage() {
-  const products = await getShopifyProducts();
+  const cookieStore = cookies();
+  const shopifyDomain = cookieStore.get('shopify_domain')?.value;
+  const shopifyToken = cookieStore.get('shopify_token')?.value;
+
+  let products = [];
+  let isConnected = false;
+
+  if (shopifyDomain && shopifyToken) {
+    products = await fetchRealShopifyProducts(shopifyDomain, shopifyToken);
+    isConnected = true;
+    if (products.length === 0) {
+      // Fallback if token invalid
+      products = await getShopifyProducts();
+      isConnected = false;
+    }
+  } else {
+    products = await getShopifyProducts();
+  }
 
   return (
     <div className="space-y-12 py-8">
       {/* Hero Section */}
       <div className="text-center space-y-4 max-w-2xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium mb-2">
-          <Zap className="w-3 h-3 fill-current" />
-          <span>Velvet Engine v1.0 Active</span>
+          {isConnected ? (
+            <>
+              <Globe className="w-3 h-3 text-green-500" />
+              <span className="text-green-500">Connected to {shopifyDomain}</span>
+            </>
+          ) : (
+            <>
+              <Zap className="w-3 h-3 fill-current" />
+              <span>Velvet Engine v1.0 Active (Demo Mode)</span>
+            </>
+          )}
         </div>
         <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
           <span className="text-white">Commerce in </span>
