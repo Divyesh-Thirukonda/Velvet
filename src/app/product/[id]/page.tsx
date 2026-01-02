@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, CheckCircle2, Box, Send, AlertTriangle, Globe, Mail, Users } from 'lucide-react';
-import { generate3DModel, publishToStore } from '@/app/actions';
+import { generate3DModel, publishToStore, sendCampaignAction } from '@/app/actions';
 import { Product, getShopifyProducts } from '@/lib/shopify';
 import VoxelRenderer from '@/components/VoxelRenderer';
 
@@ -72,13 +72,12 @@ export default function ProductPage() {
     };
 
     const handleSendCampaign = async () => {
-        // In a real app, this would trigger a Klaviyo Flow to the segment
-        // For now, we simulate sending to the specified email or segment
         setIsSending(true);
-        // Reuse generate3DModel to trigger the track event for the specific user/segment
-        // (This effectively adds them to the flow in Klaviyo if configured)
-        const emailTarget = customEmail || 'segment-sample@example.com';
-        await generate3DModel(product!.id, emailTarget, 'mock');
+        const emailTarget = customEmail || 'divyesh.thirukonda@gmail.com'; // Default for demo if empty
+        const urlToShare = mockModelUrl || 'https://velvet.app/view/voxel-demo'; // Fallback
+
+        await sendCampaignAction(product!.id, targetSegment, emailTarget, urlToShare);
+
         setIsSending(false);
         setIsSent(true);
     };

@@ -32,3 +32,40 @@ export async function fetchRealShopifyProducts(domain: string, token: string) {
         return [];
     }
 }
+
+export async function publishToRealShopifyMetafield(domain: string, token: string, productId: string, modelUrl: string) {
+    // 1. We must find the correct Metafield endpoint (Product specific)
+    const endpoint = `https://${domain}/admin/api/2024-01/products/${productId}/metafields.json`;
+
+    // 2. Payload for Metafield
+    const payload = {
+        metafield: {
+            namespace: 'velvet',
+            key: 'model_url',
+            value: modelUrl,
+            type: 'url',
+            description: 'Generated 3D Voxel Model'
+        }
+    };
+
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'X-Shopify-Access-Token': token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Shopify Metafield Error: ${errorText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to publish metafield:', error);
+        throw error;
+    }
+}

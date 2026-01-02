@@ -131,7 +131,62 @@ export async function identifyProfile(email: string, properties: Record<string, 
 
     const url = 'https://a.klaviyo.com/api/profiles/';
     // Implementation would go here calling the Profiles API
-    // For this hackathon, the Event tracking above actually creates/updates the profile automatically,
     // so this is just a helper if we needed unrelated updates.
     console.log('Identifying profile:', email, properties);
+}
+
+export async function triggerCampaignEvent(email: string, segment: string, product: any, modelUrl: string) {
+    if (KLAVIYO_PRIVATE_KEY === 'pk_mock_key') {
+        console.log('[MOCK KLAVIYO] Triggering Campaign Flow:', { email, segment });
+        return { success: true, mock: true };
+    }
+
+    const url = 'https://a.klaviyo.com/api/events/';
+    const options = {
+        method: 'POST',
+        headers: {
+            'Authorization': `Klaviyo-API-Key ${KLAVIYO_PRIVATE_KEY}`,
+            'accept': 'application/vnd.api+json',
+            'revision': KLAVIYO_REVISION,
+            'content-type': 'application/vnd.api+json'
+        },
+        body: JSON.stringify({
+            data: {
+                type: 'event',
+                attributes: {
+                    properties: {
+                        CampaignType: 'Retargeting 3D',
+                        TargetSegment: segment,
+                        ProductName: product.title,
+                        ModelURL: modelUrl,
+                        ShopLink: `https://your-store.com/products/${product.title.toLowerCase().replace(/ /g, '-')}`,
+                        Action: 'Send Email'
+                    },
+                    metric: {
+                        data: {
+                            type: 'metric',
+                            attributes: {
+                                name: 'Triggered 3D Campaign'
+                            }
+                        }
+                    },
+                    profile: {
+                        data: {
+                            type: 'profile',
+                            attributes: { email: email }
+                        }
+                    }
+                }
+            }
+        })
+    };
+
+    try {
+        const response = await fetch(url, options);
+        if (!response.ok) throw new Error(await response.text());
+        return await response.json();
+    } catch (error) {
+        console.error('Klaviyo Campaign Error:', error);
+        throw error;
+    }
 }

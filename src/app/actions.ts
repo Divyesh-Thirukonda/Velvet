@@ -1,9 +1,10 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { fetchRealShopifyProducts } from '@/lib/shopify-real';
+import { cookies } from 'next/headers';
+import { fetchRealShopifyProducts, publishToRealShopifyMetafield } from '@/lib/shopify-real';
 
-import { track3DGenerationEvent } from '@/lib/klaviyo';
+import { track3DGenerationEvent, triggerCampaignEvent } from '@/lib/klaviyo';
 import { getShopifyProductById } from '@/lib/shopify';
 import { generateGeometryFromImage, Primitive } from '@/lib/openai';
 
@@ -78,9 +79,38 @@ export async function generate3DModel(productId: string, consumerEmail: string, 
 }
 
 export async function publishToStore(productId: string, modelUrl: string) {
+    const cookieStore = cookies();
+    const domain = cookieStore.get('shopify_domain')?.value;
+    const token = cookieStore.get('shopify_token')?.value;
+
+    if (domain && token) {
+        // REAL MODE: Write to Shopify
+        try {
+            await publishToRealShopifyMetafield(domain, token, productId, modelUrl);
+            return { success: true, message: 'Published to Real Shopify Metafields (velvet.model_url)' };
+        } catch (e) {
+            console.error(e);
+            return { success: false, message: 'Failed to publish to Shopify.' };
+        }
+    }
+
+    // MOCK MODE
     await new Promise(resolve => setTimeout(resolve, 1500));
     return {
         success: true,
-        message: '3D Model published to Shopify Product Metafields.'
+        message: '3D Model published (Simulation Mode - Connect Store for Real)'
     };
+}
+
+export async function sendCampaignAction(productId: string, segment: string, email: string, modelUrl: string) {
+    // 1. Fetch Product details for the payload
+    const product = await getShopifyProductById(productId);
+
+    // 2. Trigger Real Klaviyo Event
+    try {
+        await triggerCampaignEvent(email, segment, product, modelUrl);
+        return { success: true, message: 'Campaign Triggered in Klaviyo' };
+    } catch (e) {
+        return { success: false, message: 'Failed to trigger campaign' };
+    }
 }
