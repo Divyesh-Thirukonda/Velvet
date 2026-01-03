@@ -143,6 +143,7 @@ export async function generate3DModel(productId: string, consumerEmail: string, 
         throw new Error('Product not found.');
     }
 
+
     if (mode === 'real') {
         // OPENAI VOXEL ENGINE
         const startTime = Date.now();
@@ -150,9 +151,40 @@ export async function generate3DModel(productId: string, consumerEmail: string, 
         // Track Intent
         track3DGenerationEvent(consumerEmail, product, "Generating (OpenAI Voxel)...").catch(console.error);
 
-        // Generate
+        // 1. Perception Step (Gemini)
+        // User Request: "Describe the image and product in our own words... make up the data for these"
+        console.log(`[Voxel Engine] Analyzing structure with Gemini: ${product.title}`);
+        let structuralDescription = "";
+        try {
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const imageResp = await fetch(product.images[0]);
+            const imageBuffer = await imageResp.arrayBuffer();
+            const imageBase64 = Buffer.from(imageBuffer).toString('base64');
+
+            const visionPrompt = `
+            Analyze this product image for 3D reconstruction.
+            Describe the physical structure in detail, breaking it down into simple geometric shapes (cylinders, boxes, spheres).
+            Mention relative positions, colors, and proportions.
+            Example: "A chair with 4 thin cylindrical legs, a square thick seat cushion, and a curved rectangular backrest."
+            
+            Be precise and technical.
+            `;
+
+            const result = await model.generateContent([
+                visionPrompt,
+                { inlineData: { data: imageBase64, mimeType: "image/jpeg" } }
+            ]);
+            structuralDescription = result.response.text();
+            console.log(`[Voxel Engine] Gemini Analysis: ${structuralDescription.slice(0, 100)}...`);
+        } catch (e) {
+            console.error("Gemini Vision failed, falling back to direct generation", e);
+        }
+
+        // 2. Generation Step (OpenAI with Context)
         console.log(`[Voxel Engine] Generating geometry for: ${product.title}`);
-        const primitiveData = await generateGeometryFromImage(product.images[0]);
+
+        // Pass the Gemini description to guiding the voxel placement
+        const primitiveData = await generateGeometryFromImage(product.images[0], structuralDescription);
         console.log(`[Voxel Engine] Success. Primitives count: ${primitiveData?.length}`);
 
         // Track Success

@@ -13,12 +13,15 @@ export interface Primitive {
     color: string;
 }
 
-export async function generateGeometryFromImage(imageUrl: string): Promise<Primitive[]> {
+export async function generateGeometryFromImage(imageUrl: string, description?: string): Promise<Primitive[]> {
     if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI API Key missing");
+
+    const context = description ? `\n\nCONTEXT FROM VISUAL ANALYSIS:\n"${description}"\n\nUse this context to guide your reconstruction.` : '';
 
     const prompt = `
     You are a 3D reconstruction engine. Analyze the provided image of a product and reconstructed it using a composition of basic geometric primitives (Box, Sphere, Cylinder).
-    
+    ${context}
+
     Output strictly valid JSON (no markdown block) with a root object containing a "primitives" key.
     
     Structure:
