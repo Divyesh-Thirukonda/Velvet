@@ -22,7 +22,7 @@ const DEMO_PRODUCTS: Product[] = [
     id: 'prod_002',
     title: 'Minimalist Desk Lamp',
     description: 'A touch-sensitive LED lamp with adjustable brightness and color temperature. Perfect for late-night work sessions.',
-    images: ['https://images.unsplash.com/photo-1507473888900-52e1adad5474?auto=format&fit=crop&q=80&w=600'],
+    images: ['https://images.unsplash.com/photo-1513506003013-194a5d68d801?auto=format&fit=crop&q=80&w=600'],
     price: '89.00',
     vendor: 'Lumina'
   },
@@ -43,6 +43,6 @@ export async function getShopifyProducts(): Promise<Product[]> {
 }
 
 export async function getShopifyProductById(id: string): Promise<Product | undefined> {
-   await new Promise(resolve => setTimeout(resolve, 500));
-   return DEMO_PRODUCTS.find(p => p.id === id);
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return DEMO_PRODUCTS.find(p => p.id === id);
 }
