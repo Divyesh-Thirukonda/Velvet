@@ -38,42 +38,48 @@ export async function generateVariantImage(productId: string, consumerEmail: str
     const originalImage = product.images[0];
 
     try {
-        // 2. Vision Analysis + Prompt Synthesis (Google Gemini)
-        console.log("Analyzing with Gemini 2.0 Flash...");
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        let dallePrompt = "";
+        try {
+            console.log("Analyzing with Gemini 2.0 Flash...");
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-        // Fetch user image to pass to Gemini
-        let imageUrl = originalImage;
-        if (imageUrl.startsWith('/')) {
-            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-            imageUrl = `${baseUrl}${imageUrl}`;
-        }
+            // Fetch user image to pass to Gemini
+            let imageUrl = originalImage;
+            if (imageUrl.startsWith('/')) {
+                const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+                imageUrl = `${baseUrl}${imageUrl}`;
+            }
 
-        const imageResp = await fetch(imageUrl);
-        const imageBuffer = await imageResp.arrayBuffer();
-        const imageBase64 = Buffer.from(imageBuffer).toString('base64');
+            const imageResp = await fetch(imageUrl);
+            const imageBuffer = await imageResp.arrayBuffer();
+            const imageBase64 = Buffer.from(imageBuffer).toString('base64');
 
-        const prompt = `
-        You are a Creative Director. 
-        I need a DALL-E 3 prompt to generate a new product variant.
-        Original Product: See image.
-        User Request: "${variantPrompt}"
-        
-        Output ONLY the detailed prompt text describing the new variant, maintaining the original angle and composition.
-        `;
+            const prompt = `
+            You are a Creative Director. 
+            I need a DALL-E 3 prompt to generate a new product variant.
+            Original Product: See image.
+            User Request: "${variantPrompt}"
+            
+            Output ONLY the detailed prompt text describing the new variant, maintaining the original angle and composition.
+            `;
 
-        const result = await model.generateContent([
-            prompt,
-            {
-                inlineData: {
-                    data: imageBase64,
-                    mimeType: "image/jpeg",
+            const result = await model.generateContent([
+                prompt,
+                {
+                    inlineData: {
+                        data: imageBase64,
+                        mimeType: "image/jpeg",
+                    },
                 },
-            },
-        ]);
+            ]);
 
-        const dallePrompt = result.response.text();
-        console.log("Gemini Generated Prompt:", dallePrompt);
+            dallePrompt = result.response.text();
+            console.log("Gemini Generated Prompt:", dallePrompt);
+        } catch (error: any) {
+            console.warn("Gemini Rate Limit/Error (Fallback Mode):", error.message);
+            dallePrompt = `A high-quality 3D product render of ${product.title}, modified to match request: "${variantPrompt}". Maintain professional studio lighting and composition.`;
+            console.log("Fallback Prompt:", dallePrompt);
+        }
 
         // 3. Generate Image (DALL-E 3) 
         // (Maintaining DALL-E for generation reliability in this environment, driven by Gemini Intelligence)
@@ -205,8 +211,10 @@ PRODUCT SPECIFICATIONS:
             ]);
             structuralDescription = result.response.text();
             console.log(`[Voxel Engine] Gemini Analysis: ${structuralDescription.slice(0, 150)}...`);
-        } catch (e) {
-            console.error("Gemini Vision failed, falling back to direct generation", e);
+            console.log(`[Voxel Engine] Gemini Analysis: ${structuralDescription.slice(0, 150)}...`);
+        } catch (e: any) {
+            console.error("Gemini Vision failed/rate-limited, falling back to basic description", e.message);
+            structuralDescription = `A standard ${product.title} with typical dimensions and structure. Breakdown: central body, supporting legs or base, functional components.`;
         }
 
         // 2. Generation Step (OpenAI with Context)
