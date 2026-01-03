@@ -1,21 +1,32 @@
 // src/lib/klaviyo.ts
+import { cookies } from 'next/headers';
 
-const KLAVIYO_PRIVATE_KEY = process.env.NEXT_PUBLIC_KLAVIYO_PRIVATE_KEY;
-const KLAVIYO_REVISION = '2025-01-15'; // Always pin to a specific revision
+const CLASSIC_PRIVATE_KEY = process.env.NEXT_PUBLIC_KLAVIYO_PRIVATE_KEY;
+const KLAVIYO_REVISION = '2025-01-15';
+
+// Helper to get effective token
+async function getKlaviyoToken() {
+    const cookieStore = await cookies();
+    const oauthToken = cookieStore.get('klaviyo_token')?.value;
+    return oauthToken ? `Bearer ${oauthToken}` : `Klaviyo-API-Key ${CLASSIC_PRIVATE_KEY}`;
+}
 
 export async function track3DGenerationEvent(email: string, product: any, modelUrl: string) {
     // 1. Check for Mock Mode
-    if (KLAVIYO_PRIVATE_KEY === 'pk_mock_key') {
+    if (CLASSIC_PRIVATE_KEY === 'pk_mock_key') {
         console.log('[MOCK KLAVIYO] Tracking "Generated 3D Model" Event:', { email, title: product.title });
         return { success: true, mock: true };
     }
 
-    // 2. Construct Payload for Tracking API
+    // 2. Get Auth Header
+    const authHeader = await getKlaviyoToken();
+
+    // 3. Construct Payload for Tracking API
     const url = 'https://a.klaviyo.com/api/events/';
     const options = {
         method: 'POST',
         headers: {
-            'Authorization': `Klaviyo-API-Key ${KLAVIYO_PRIVATE_KEY}`,
+            'Authorization': authHeader,
             'accept': 'application/vnd.api+json',
             'revision': KLAVIYO_REVISION,
             'content-type': 'application/vnd.api+json'
@@ -78,12 +89,14 @@ export async function track3DGenerationEvent(email: string, product: any, modelU
 }
 
 export async function getKlaviyoMetricId(metricName: string) {
-    if (!KLAVIYO_PRIVATE_KEY || KLAVIYO_PRIVATE_KEY.startsWith('pk_mock')) return null;
+    if (!CLASSIC_PRIVATE_KEY || CLASSIC_PRIVATE_KEY.startsWith('pk_mock')) return null;
+
+    const authHeader = await getKlaviyoToken();
 
     const response = await fetch(`https://a.klaviyo.com/api/metrics/?filter=equals(attributes.name,"${metricName}")`, {
         method: 'GET',
         headers: {
-            'Authorization': `Klaviyo-API-Key ${KLAVIYO_PRIVATE_KEY}`,
+            'Authorization': authHeader,
             'accept': 'application/vnd.api+json',
             'revision': KLAVIYO_REVISION
         }
@@ -98,10 +111,12 @@ export async function getRecentKlaviyoEvents(metricName: string) {
     const metricId = await getKlaviyoMetricId(metricName);
     if (!metricId) return [];
 
+    const authHeader = await getKlaviyoToken();
+
     const response = await fetch(`https://a.klaviyo.com/api/events/?filter=equals(metric_id,"${metricId}")&sort=-timestamp&page[size]=10&include=profile`, {
         method: 'GET',
         headers: {
-            'Authorization': `Klaviyo-API-Key ${KLAVIYO_PRIVATE_KEY}`,
+            'Authorization': authHeader,
             'accept': 'application/vnd.api+json',
             'revision': KLAVIYO_REVISION
         }
@@ -127,7 +142,7 @@ export async function getRecentKlaviyoEvents(metricName: string) {
 }
 
 export async function identifyProfile(email: string, properties: Record<string, any>) {
-    if (KLAVIYO_PRIVATE_KEY === 'pk_mock_key') return;
+    if (CLASSIC_PRIVATE_KEY === 'pk_mock_key') return;
 
     const url = 'https://a.klaviyo.com/api/profiles/';
     // Implementation would go here calling the Profiles API
@@ -136,16 +151,18 @@ export async function identifyProfile(email: string, properties: Record<string, 
 }
 
 export async function triggerCampaignEvent(email: string, segment: string, product: any, modelUrl: string) {
-    if (KLAVIYO_PRIVATE_KEY === 'pk_mock_key') {
+    if (CLASSIC_PRIVATE_KEY === 'pk_mock_key') {
         console.log('[MOCK KLAVIYO] Triggering Campaign Flow:', { email, segment });
         return { success: true, mock: true };
     }
+
+    const authHeader = await getKlaviyoToken();
 
     const url = 'https://a.klaviyo.com/api/events/';
     const options = {
         method: 'POST',
         headers: {
-            'Authorization': `Klaviyo-API-Key ${KLAVIYO_PRIVATE_KEY}`,
+            'Authorization': authHeader,
             'accept': 'application/vnd.api+json',
             'revision': KLAVIYO_REVISION,
             'content-type': 'application/vnd.api+json'
@@ -192,7 +209,7 @@ export async function triggerCampaignEvent(email: string, segment: string, produ
 }
 
 export async function trackVariantGeneration(email: string, product: any, variantPrompt: string, variantImageUrl: string) {
-    if (!email || KLAVIYO_PRIVATE_KEY === 'pk_mock_key') return;
+    if (!email || CLASSIC_PRIVATE_KEY === 'pk_mock_key') return;
 
     try {
         const payload = {
@@ -225,10 +242,12 @@ export async function trackVariantGeneration(email: string, product: any, varian
             }
         };
 
+        const authHeader = await getKlaviyoToken();
+
         await fetch(`https://a.klaviyo.com/api/events/`, {
             method: 'POST',
             headers: {
-                'Authorization': `Klaviyo-API-Key ${KLAVIYO_PRIVATE_KEY}`,
+                'Authorization': authHeader,
                 'revision': KLAVIYO_REVISION,
                 'accept': 'application/vnd.api+json',
                 'content-type': 'application/vnd.api+json'

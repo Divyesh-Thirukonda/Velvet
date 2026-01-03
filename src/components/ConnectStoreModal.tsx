@@ -119,6 +119,18 @@ export default function ConnectStoreModal({ isOpen, onClose, onConnect }: Connec
                             </button>
                         )}
                     </div>
+
+                    <div className="pt-4 mt-4 border-t border-[#333]">
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Integrations</h4>
+                        <button
+                            type="button"
+                            onClick={() => window.location.href = '/api/klaviyo/auth'}
+                            className="btn w-full bg-[#111] hover:bg-[#222] border border-[#333] text-white flex items-center justify-center gap-2"
+                        >
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M24 0H0v24h24V0z" fill="none" /><path d="M6 19h2.5v-7l5.3 7h3.2l-6-7.5L17 4h-3l-4 5.5V4H6v15z" /></svg>
+                            Connect Klaviyo
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
