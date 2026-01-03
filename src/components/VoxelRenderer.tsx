@@ -35,6 +35,9 @@ function Geometry({ item }: { item: PrimitiveData }) {
 }
 
 export default function VoxelRenderer({ data }: Props) {
+    if (!data || data.length === 0) {
+        return <div className="w-full h-full flex items-center justify-center text-white/50">No Voxel Data</div>;
+    }
     return (
         <div className="w-full h-full min-h-[400px]">
             <Canvas shadows dpr={[1, 2]} camera={{ position: [5, 5, 5], fov: 50 }}>

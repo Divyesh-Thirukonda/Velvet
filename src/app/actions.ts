@@ -151,7 +151,9 @@ export async function generate3DModel(productId: string, consumerEmail: string, 
         track3DGenerationEvent(consumerEmail, product, "Generating (OpenAI Voxel)...").catch(console.error);
 
         // Generate
+        console.log(`[Voxel Engine] Generating geometry for: ${product.title}`);
         const primitiveData = await generateGeometryFromImage(product.images[0]);
+        console.log(`[Voxel Engine] Success. Primitives count: ${primitiveData?.length}`);
 
         // Track Success
         const duration = (Date.now() - startTime) / 1000;
@@ -160,7 +162,7 @@ export async function generate3DModel(productId: string, consumerEmail: string, 
         return {
             success: true,
             mode: 'real',
-            voxelData: primitiveData,
+            voxelData: primitiveData, // Ensure this is not undefined
             message: 'Voxel Model Generated',
             taskId: `voxel_${Date.now()}`
         };
