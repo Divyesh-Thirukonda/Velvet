@@ -54,25 +54,45 @@ export async function generate3DModel(productId: string, consumerEmail: string, 
         ? 'Product not found in connected store. (Real Mode Active)'
         : 'Product not found');
 
-    // OPENAI VOXEL ENGINE
-    const startTime = Date.now();
+    if (mode === 'real') {
+        // OPENAI VOXEL ENGINE
+        const startTime = Date.now();
 
-    // Track Intent
-    track3DGenerationEvent(consumerEmail, product, "Generating (OpenAI Voxel)...").catch(console.error);
+        // Track Intent
+        track3DGenerationEvent(consumerEmail, product, "Generating (OpenAI Voxel)...").catch(console.error);
 
-    // Generate
-    const primitiveData = await generateGeometryFromImage(product.images[0]);
+        // Generate
+        const primitiveData = await generateGeometryFromImage(product.images[0]);
 
-    // Track Success
-    const duration = (Date.now() - startTime) / 1000;
-    console.log(`Voxel Gen took ${duration}s`);
+        // Track Success
+        const duration = (Date.now() - startTime) / 1000;
+        console.log(`Voxel Gen took ${duration}s`);
+
+        return {
+            success: true,
+            mode: 'real',
+            voxelData: primitiveData,
+            message: 'Voxel Model Generated',
+            taskId: `voxel_${Date.now()}`
+        };
+    }
+
+    // --- Mock Flow ---
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    const randomModel = MOCK_MODELS[Math.floor(Math.random() * MOCK_MODELS.length)];
+
+    try {
+        await track3DGenerationEvent(consumerEmail, product, randomModel);
+    } catch (e) {
+        console.error('Klaviyo Tracking Failed', e);
+    }
 
     return {
         success: true,
-        mode: 'real',
-        voxelData: primitiveData,
-        message: 'Voxel Model Generated',
-        taskId: `voxel_${Date.now()}`
+        modelUrl: randomModel,
+        taskId: `mock_${Date.now()}`,
+        mode: 'mock',
+        message: 'Model generated (Mock)'
     };
 
 }
