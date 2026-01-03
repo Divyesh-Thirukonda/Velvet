@@ -32,7 +32,8 @@ interface GenerationResult {
 }
 
 // Helper to get Product (Real or Mock)
-async function getProductHelper(productId: string) {
+// Helper to get Product (Real or Mock)
+async function getProductHelper(productId: string, allowMock: boolean = false) {
     // 1. Try Real Store First
     const cookieStore = await cookies();
     const domain = cookieStore.get('shopify_domain')?.value;
@@ -43,14 +44,20 @@ async function getProductHelper(productId: string) {
         if (realProduct) return realProduct;
     }
 
-    // 2. Fallback to Mock
-    return await getShopifyProductById(productId);
+    // 2. Fallback to Mock (STRICT MODE: Only if allowMock is true)
+    if (allowMock) {
+        return await getShopifyProductById(productId);
+    }
+
+    return null;
 }
 
 export async function generate3DModel(productId: string, consumerEmail: string, mode: 'real' | 'mock' = 'mock'): Promise<GenerationResult> {
-    // 1. Fetch Product Data
-    const product = await getProductHelper(productId);
-    if (!product) throw new Error('Product not found');
+    // 1. Fetch Product Data (STRICT: Real mode = No Mock Fallback)
+    const product = await getProductHelper(productId, mode === 'mock');
+    if (!product) throw new Error(mode === 'real'
+        ? 'Product not found in connected store. (Real Mode Active)'
+        : 'Product not found');
 
     if (mode === 'real') {
         // OPENAI VOXEL ENGINE
@@ -119,8 +126,8 @@ export async function publishToStore(productId: string, modelUrl: string) {
 }
 
 export async function sendCampaignAction(productId: string, segment: string, email: string, modelUrl: string) {
-    // 1. Fetch Product details for the payload
-    const product = await getProductHelper(productId);
+    // 1. Fetch Product details for the payload (Strict Real)
+    const product = await getProductHelper(productId, false);
     if (!product) return { success: false, message: 'Product not found' };
 
     // 2. Trigger Real Klaviyo Event
