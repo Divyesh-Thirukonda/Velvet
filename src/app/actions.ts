@@ -40,53 +40,35 @@ async function getProductHelper(productId: string, allowMock: boolean = false) {
     return null;
 }
 
-export async function generate3DModel(productId: string, consumerEmail: string, mode: 'real' | 'mock' = 'mock'): Promise<GenerationResult> {
-    // 1. Fetch Product Data (STRICT: Real mode = No Mock Fallback)
-    const product = await getProductHelper(productId, mode === 'mock');
-    if (!product) throw new Error(mode === 'real'
-        ? 'Product not found in connected store. (Real Mode Active)'
-        : 'Product not found');
+export async function generate3DModel(productId: string, consumerEmail: string): Promise<GenerationResult> {
+    // 1. Fetch Product Data (Strict Real)
+    const product = await getProductHelper(productId, false);
 
-    if (mode === 'real') {
-        // OPENAI VOXEL ENGINE
-        const startTime = Date.now();
-
-        // Track Intent
-        track3DGenerationEvent(consumerEmail, product, "Generating (OpenAI Voxel)...").catch(console.error);
-
-        // Generate
-        const primitiveData = await generateGeometryFromImage(product.images[0]);
-
-        // Track Success
-        const duration = (Date.now() - startTime) / 1000;
-        console.log(`Voxel Gen took ${duration}s`);
-
-        return {
-            success: true,
-            mode: 'real',
-            voxelData: primitiveData,
-            message: 'Voxel Model Generated',
-            taskId: `voxel_${Date.now()}`
-        };
+    if (!product) {
+        throw new Error('Product not found in connected store. Please connect a Shopify store.');
     }
 
-    // --- Mock Flow ---
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    const randomModel = MOCK_MODELS[Math.floor(Math.random() * MOCK_MODELS.length)];
+    // OPENAI VOXEL ENGINE
+    const startTime = Date.now();
 
-    try {
-        await track3DGenerationEvent(consumerEmail, product, randomModel);
-    } catch (e) {
-        console.error('Klaviyo Tracking Failed', e);
-    }
+    // Track Intent
+    track3DGenerationEvent(consumerEmail, product, "Generating (OpenAI Voxel)...").catch(console.error);
+
+    // Generate
+    const primitiveData = await generateGeometryFromImage(product.images[0]);
+
+    // Track Success
+    const duration = (Date.now() - startTime) / 1000;
+    console.log(`Voxel Gen took ${duration}s`);
 
     return {
         success: true,
-        modelUrl: randomModel, // Explicitly string here
-        taskId: `mock_${Date.now()}`,
-        mode: 'mock',
-        message: 'Model generated (Mock)'
+        mode: 'real',
+        voxelData: primitiveData,
+        message: 'Voxel Model Generated',
+        taskId: `voxel_${Date.now()}`
     };
+
 }
 
 export async function publishToStore(productId: string, modelUrl: string) {
