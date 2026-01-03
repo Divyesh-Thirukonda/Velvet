@@ -39,8 +39,8 @@ export async function generateVariantImage(productId: string, consumerEmail: str
 
     try {
         // 2. Vision Analysis + Prompt Synthesis (Google Gemini)
-        console.log("Analyzing with Gemini 1.5 Flash...");
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        console.log("Analyzing with Gemini 1.5 Pro...");
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
         // Fetch user image to pass to Gemini
         let imageUrl = originalImage;
@@ -163,7 +163,7 @@ export async function generate3DModel(productId: string, consumerEmail: string, 
         console.log(`[Voxel Engine] Analyzing structure with Gemini: ${product.title}`);
         let structuralDescription = "";
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
             const imageResp = await fetch(product.images[0]);
             const imageBuffer = await imageResp.arrayBuffer();
             const imageBase64 = Buffer.from(imageBuffer).toString('base64');
