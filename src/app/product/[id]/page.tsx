@@ -209,16 +209,16 @@ export default function ProductPage() {
                                 <div className="space-y-3 mb-4">
                                     <label className="text-xs font-medium text-muted-foreground block">Target Audience</label>
                                     <div className="relative">
-                                        <Users className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+                                        <Users className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground pointer-events-none" />
                                         <select
                                             value={targetSegment}
                                             onChange={(e) => setTargetSegment(e.target.value)}
-                                            className="input pl-9"
+                                            className="w-full bg-[#111] border border-[#333] rounded-md pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white appearance-none"
                                         >
-                                            <option>Lost Customers (30 Days)</option>
-                                            <option>Cart Abandoners (High Value)</option>
-                                            <option>VIP Loyalty Members</option>
-                                            <option>Specific Email (Test)</option>
+                                            <option className="text-black">Lost Customers (30 Days)</option>
+                                            <option className="text-black">Cart Abandoners (High Value)</option>
+                                            <option className="text-black">VIP Loyalty Members</option>
+                                            <option className="text-black">Specific Email (Test)</option>
                                         </select>
                                     </div>
 
@@ -228,7 +228,7 @@ export default function ProductPage() {
                                             placeholder="name@example.com"
                                             value={customEmail}
                                             onChange={(e) => setCustomEmail(e.target.value)}
-                                            className="input"
+                                            className="input mt-2"
                                         />
                                     )}
                                 </div>
@@ -236,7 +236,10 @@ export default function ProductPage() {
                                 <button
                                     onClick={handleSendCampaign}
                                     disabled={isSent || isSending}
-                                    className={`btn w-full gap-2 border border-[#333] hover:bg-white/5 ${isSent ? 'text-green-500 border-green-500/20' : ''}`}
+                                    className={`btn w-full gap-2 font-medium transition-all ${isSent
+                                            ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                            : 'bg-white text-black hover:bg-gray-200 border-transparent'
+                                        }`}
                                 >
                                     {isSent ? (
                                         <> <CheckCircle2 className="w-4 h-4" /> Campaign Queued </>
