@@ -59,6 +59,14 @@ export default function DemoProductPage() {
 
     const handleSendCampaign = async () => {
         setIsSending(true);
+
+        const emailTarget = customEmail || 'demo-user@example.com';
+        if (customEmail && !customEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+            alert('Please enter a valid email address.');
+            setIsSending(false);
+            return;
+        }
+
         // Simulate sending
         await new Promise(resolve => setTimeout(resolve, 1000));
         await generate3DModel(product!.id, customEmail || 'demo-segment', 'mock');
@@ -84,13 +92,18 @@ export default function DemoProductPage() {
                         </div>
 
                         {status === 'complete' ? (
-                            <div className="w-full h-full flex items-center justify-center bg-black/20">
-                                <div className="text-center space-y-4 animate-in fade-in zoom-in duration-500">
-                                    <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-                                        <Box className="w-10 h-10 text-white" />
-                                    </div>
-                                    <p className="text-white font-medium">Interactive 3D Ready (Mock)</p>
-                                </div>
+                            <div className="w-full h-full bg-[#111]">
+                                {/* @ts-ignore */}
+                                <model-viewer
+                                    src={mockModelUrl}
+                                    poster={product.images[0]}
+                                    camera-controls
+                                    auto-rotate
+                                    shadow-intensity="1"
+                                    camera-orbit="45deg 55deg 2.5m"
+                                    field-of-view="30deg"
+                                    style={{ width: '100%', height: '100%' }}
+                                />
                             </div>
                         ) : status === 'failed' ? (
                             <div className="w-full h-full flex items-center justify-center text-red-500">

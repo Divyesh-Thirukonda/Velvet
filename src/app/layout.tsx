@@ -17,6 +17,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+      </head>
       <body className={outfit.className}>
         <Navbar />
         <main className="pt-24 min-h-screen relative overflow-hidden">

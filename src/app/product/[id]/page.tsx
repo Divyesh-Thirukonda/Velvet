@@ -79,6 +79,13 @@ export default function ProductPage() {
     const handleSendCampaign = async () => {
         setIsSending(true);
         const emailTarget = customEmail || 'divyesh.thirukonda@gmail.com'; // Default for demo if empty
+
+        if (!emailTarget.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+            alert("Please enter a valid email address.");
+            setIsSending(false);
+            return;
+        }
+
         const urlToShare = mockModelUrl || 'https://velvet.app/view/voxel-demo'; // Fallback
 
         await sendCampaignAction(product!.id, targetSegment, emailTarget, urlToShare);
@@ -108,8 +115,18 @@ export default function ProductPage() {
                                 <VoxelRenderer key={JSON.stringify(voxelData)} data={voxelData || []} />
                             </div>
                         ) : isMock ? (
-                            <div className="w-full h-full flex items-center justify-center bg-black/50">
-                                <Box className="w-16 h-16 text-white" />
+                            <div className="w-full h-full bg-[#111]">
+                                {/* @ts-ignore */}
+                                <model-viewer
+                                    src={mockModelUrl}
+                                    poster={product.images[0]}
+                                    camera-controls
+                                    auto-rotate
+                                    shadow-intensity="1"
+                                    camera-orbit="45deg 55deg 2.5m"
+                                    field-of-view="30deg"
+                                    style={{ width: '100%', height: '100%' }}
+                                />
                             </div>
                         ) : status === 'failed' ? (
                             <div className="w-full h-full flex items-center justify-center text-red-500">
