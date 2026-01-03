@@ -19,18 +19,23 @@ export async function generateGeometryFromImage(imageUrl: string): Promise<Primi
     const prompt = `
     You are a 3D reconstruction engine. Analyze the provided image of a product and reconstructed it using a composition of basic geometric primitives (Box, Sphere, Cylinder).
     
-    Output strictly valid JSON (no markdown block) which is an array of objects.
-    Each object must have:
-    - type: "box", "sphere", or "cylinder"
-    - position: [x, y, z] (coordinates between -5 and 5)
-    - scale: [width, height, depth] (sizes between 0.1 and 5)
-    - rotation: [x, y, z] (in radians)
-    - color: "#hexcode" (sample the dominant colors from the image part)
+    Output strictly valid JSON (no markdown block) with a root object containing a "primitives" key.
+    
+    Structure:
+    {
+      "primitives": [
+        {
+          "type": "box" | "sphere" | "cylinder",
+          "position": [x, y, z], // Coordinates between -5 and 5
+          "scale": [w, h, d],    // Sizes between 0.1 and 5
+          "rotation": [x, y, z], // Radians
+          "color": "#hexcode"    // Sampled from image
+        }
+      ]
+    }
 
     Keep the composition simple but recognizable (approx 10-20 primitives).
     Focus on the main shape.
-    Example output format:
-    [{"type":"box","position":[0,0,0],"scale":[1,1,1],"rotation":[0,0,0],"color":"#ff0000"}]
     `;
 
     try {
@@ -59,14 +64,23 @@ export async function generateGeometryFromImage(imageUrl: string): Promise<Primi
         });
 
         const raw = response.choices[0].message.content;
+        console.log("OpenAI Raw Response:", raw); // Debug Log
+
         if (!raw) throw new Error("No content from OpenAI");
 
-        // Handle potential "primitives" wrapper key if GPT adds one, or array directly
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) return parsed as Primitive[];
-        if (parsed.primitives && Array.isArray(parsed.primitives)) return parsed.primitives as Primitive[];
+        // Cleanup potential markdown fences if GPT ignores system prompt
+        const cleanJson = raw.replace(/```json/g, '').replace(/```/g, '').trim();
 
-        // Fallback if structure is unexpected
+        const parsed = JSON.parse(cleanJson);
+
+        // Handle Wrapper Key
+        if (parsed.primitives && Array.isArray(parsed.primitives)) {
+            return parsed.primitives as Primitive[];
+        }
+
+        // Fallback for direct array (unlikely with json_object mode but possible)
+        if (Array.isArray(parsed)) return parsed as Primitive[];
+
         console.warn("Unexpected JSON structure:", raw);
         return [];
     } catch (e) {
