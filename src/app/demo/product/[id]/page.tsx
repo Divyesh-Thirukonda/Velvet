@@ -48,8 +48,8 @@ export default function DemoProductPage() {
         if (!product) return;
         setStatus('generating');
         try {
-            // Force REAL mode (Voxel Engine) even for demo
-            const result = await generate3DModel(product.id, 'demo-user', 'real');
+            // Use MOCK mode for demo (realistic pre-selected models)
+            const result = await generate3DModel(product.id, 'demo-user', 'mock');
 
             if (result.success && result.voxelData) {
                 setVoxelData(result.voxelData);

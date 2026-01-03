@@ -227,17 +227,23 @@ PRODUCT SPECIFICATIONS:
     console.log(`[Mock Mode] Simulating 3D generation for: ${product.title}`);
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // Deterministic Selection based on Product Title
+    // Deterministic Selection - Return realistic Sketchfab embeds based on product type
     const lowerTitle = product.title.toLowerCase();
     let selectedModel = RELEVANT_MODELS['default'];
 
-    // For chair products, return realistic Sketchfab embed
+    // Return high-quality Sketchfab models for all demo products
     if (lowerTitle.includes('chair')) {
         selectedModel = 'https://sketchfab.com/models/cd5ef0305d8545dd8cd934ebb99cf7d5/embed';
-        console.log('[Mock Mode] Returning realistic Sketchfab chair model');
+        console.log('[Mock Mode] Returning realistic Sketchfab ergonomic chair');
     }
-    else if (lowerTitle.includes('lamp')) selectedModel = RELEVANT_MODELS['lamp'];
-    else if (lowerTitle.includes('headphones')) selectedModel = RELEVANT_MODELS['headphones'];
+    else if (lowerTitle.includes('lamp')) {
+        selectedModel = 'https://sketchfab.com/models/f5d4eb4b1fb74a2f99b9b68e4029aba2/embed';
+        console.log('[Mock Mode] Returning realistic Sketchfab desk lamp');
+    }
+    else if (lowerTitle.includes('headphones')) {
+        selectedModel = 'https://sketchfab.com/models/b4dd9b5ea7d3470c9eb70a345cecae07/embed';
+        console.log('[Mock Mode] Returning realistic Sketchfab headphones');
+    }
 
     // Fallback if random was desired, but for demo continuity we prefer deterministic
     // const randomModel = MOCK_MODELS[Math.floor(Math.random() * MOCK_MODELS.length)];
