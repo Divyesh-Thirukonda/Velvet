@@ -19,6 +19,63 @@ const RELEVANT_MODELS: Record<string, string> = {
     'default': 'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb'
 };
 
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+});
+
+export async function generateVariantImage(productId: string, consumerEmail: string, variantPrompt: string): Promise<{ success: boolean; imageUrl?: string; message: string }> {
+    // 1. Fetch Product
+    const product = await getProductHelper(productId, true); // Allow mock for demo flexibility
+    if (!product) return { success: false, message: 'Product not found' };
+
+    const originalImage = product.images[0];
+
+    try {
+        // 2. Vision Analysis + Prompt Synthesis (GPT-4o)
+        // We ask GPT-4o to look at the image and the user's request, and output a DALL-E 3 prompt.
+        const synthesisResponse = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+                {
+                    role: "system",
+                    content: "You are a Creative Director. Analyze the product image and the user's modification request. Output a detailed DALL-E 3 prompt that recreates the product with the requested changes, maintaining the original angle, lighting, and composition."
+                },
+                {
+                    role: "user",
+                    content: [
+                        { type: "text", text: `User Request: "${variantPrompt}"` },
+                        { type: "image_url", image_url: { url: originalImage } }
+                    ]
+                }
+            ],
+            max_tokens: 300
+        });
+
+        const dallePrompt = synthesisResponse.choices[0].message.content || `A photo of ${product.title}, ${variantPrompt}`;
+        console.log("Generated DALL-E Prompt:", dallePrompt);
+
+        // 3. Generate Image (DALL-E 3)
+        const imageResponse = await openai.images.generate({
+            model: "dall-e-3",
+            prompt: dallePrompt,
+            n: 1,
+            size: "1024x1024",
+            response_format: "url"
+        });
+
+        const newImageUrl = imageResponse.data?.[0]?.url;
+        if (!newImageUrl) throw new Error("No image generated");
+
+        return { success: true, imageUrl: newImageUrl, message: 'Variant Generated' };
+
+    } catch (e) {
+        console.error("Variant Gen Error:", e);
+        return { success: false, message: 'Failed to generate variant.' };
+    }
+}
+
 /*
 const MOCK_MODELS = [
     'https://modelviewer.dev/shared-assets/models/Astronaut.glb',

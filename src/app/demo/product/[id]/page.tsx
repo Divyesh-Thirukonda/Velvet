@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, CheckCircle2, Box, Send, AlertTriangle, Globe, Mail, Users, Zap } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle2, Box, Send, AlertTriangle, Globe, Mail, Users, Zap, Wand2 } from 'lucide-react';
 import { generate3DModel, publishToStore } from '@/app/actions';
 import { Product, getShopifyProducts } from '@/lib/shopify';
 import VoxelRenderer from '@/components/VoxelRenderer';
@@ -157,20 +157,81 @@ export default function DemoProductPage() {
                     </div>
 
                     {status !== 'complete' ? (
-                        <div className="p-6 border border-[#333] rounded-lg bg-[#0a0a0a]">
-                            <h3 className="font-semibold mb-4">Step 1: Generate Asset</h3>
-                            <p className="text-xs text-muted-foreground mb-4">
-                                Create a 3D Voxel representation (Simulated).
-                            </p>
-                            <button
-                                onClick={handleGenerate}
-                                disabled={status === 'generating'}
-                                className="btn btn-primary w-full gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
-                            >
-                                <Box className="w-4 h-4" />
-                                {status === 'generating' ? 'Processing...' : 'Instant Generate'}
-                            </button>
-                        </div>
+                        <>
+                            <div className="p-6 border border-[#333] rounded-lg bg-[#0a0a0a]">
+                                <h3 className="font-semibold mb-4">Step 1: Generate Asset</h3>
+                                <p className="text-xs text-muted-foreground mb-4">
+                                    Create a 3D Voxel representation (Simulated).
+                                </p>
+                                <button
+                                    onClick={handleGenerate}
+                                    disabled={status === 'generating'}
+                                    className="btn btn-primary w-full gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+                                >
+                                    <Box className="w-4 h-4" />
+                                    {status === 'generating' ? 'Processing...' : 'Instant Generate'}
+                                </button>
+                            </div>
+
+                            {/* Variant Studio */}
+                            <div className="p-6 border border-[#333] rounded-lg bg-[#0a0a0a]">
+                                <h3 className="font-semibold mb-4 flex items-center gap-2">
+                                    <Wand2 className="w-4 h-4 text-purple-400" /> Variant Studio
+                                </h3>
+                                <p className="text-xs text-muted-foreground mb-4">
+                                    Restyle this product using Generative AI.
+                                </p>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Midnight Blue Leather"
+                                        className="input text-sm"
+                                        id="variant-api-input"
+                                    />
+                                    <button
+                                        onClick={async () => {
+                                            const input = document.getElementById('variant-api-input') as HTMLInputElement;
+                                            if (!input?.value) return;
+                                            const prompt = input.value;
+
+                                            // 1. Optimistic UI updates
+                                            const btn = document.getElementById('variant-btn') as HTMLButtonElement;
+                                            const originalText = btn.innerText;
+                                            btn.innerText = 'Creating...';
+                                            btn.disabled = true;
+
+                                            try {
+                                                // 2. Call Backend
+                                                // Dynamic import to avoid circular dep issues in some setups, but here we can just import
+                                                const { generateVariantImage } = await import('@/app/actions');
+                                                const res = await generateVariantImage(product!.id, 'demo', prompt);
+
+                                                if (res.success && res.imageUrl && product) {
+                                                    // 3. Update Product Image locally to the new variant
+                                                    setProduct({ ...product, images: [res.imageUrl] });
+                                                    // Reset 3D status to force regeneration
+                                                    setStatus('idle');
+                                                    setVoxelData(null);
+                                                    setMockModelUrl(null);
+                                                } else {
+                                                    alert('Variant generation failed.');
+                                                }
+                                            } catch (e) {
+                                                console.error(e);
+                                                alert('Error generating variant');
+                                            } finally {
+                                                btn.innerText = originalText;
+                                                btn.disabled = false;
+                                            }
+                                        }}
+                                        id="variant-btn"
+                                        className="btn border border-[#333] hover:bg-white/5"
+                                    >
+                                        <Wand2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        </>
                     ) : (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
