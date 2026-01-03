@@ -11,11 +11,21 @@ import { generateGeometryFromImage, Primitive } from '@/lib/openai';
 // Real-only actions
 
 // Mock list of 3D models to return
+// Deterministic Mock Models for Demo Products
+const RELEVANT_MODELS: Record<string, string> = {
+    'chair': 'https://modelviewer.dev/shared-assets/models/Chair.glb',
+    'lamp': 'https://modelviewer.dev/shared-assets/models/Mixer.glb', // Visualization placeholder
+    'headphones': 'https://modelviewer.dev/shared-assets/models/Astronaut.glb', // Tech placeholder
+    'default': 'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb'
+};
+
+/*
 const MOCK_MODELS = [
     'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
     'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb',
     'https://modelviewer.dev/shared-assets/models/Horse.glb'
 ];
+*/
 
 interface GenerationResult {
     success: boolean;
@@ -79,17 +89,27 @@ export async function generate3DModel(productId: string, consumerEmail: string, 
 
     // --- Mock Flow ---
     await new Promise(resolve => setTimeout(resolve, 3000));
-    const randomModel = MOCK_MODELS[Math.floor(Math.random() * MOCK_MODELS.length)];
+
+    // Deterministic Selection based on Product Title
+    const lowerTitle = product.title.toLowerCase();
+    let selectedModel = RELEVANT_MODELS['default'];
+
+    if (lowerTitle.includes('chair')) selectedModel = RELEVANT_MODELS['chair'];
+    else if (lowerTitle.includes('lamp')) selectedModel = RELEVANT_MODELS['lamp'];
+    else if (lowerTitle.includes('headphones')) selectedModel = RELEVANT_MODELS['headphones'];
+
+    // Fallback if random was desired, but for demo continuity we prefer deterministic
+    // const randomModel = MOCK_MODELS[Math.floor(Math.random() * MOCK_MODELS.length)];
 
     try {
-        await track3DGenerationEvent(consumerEmail, product, randomModel);
+        await track3DGenerationEvent(consumerEmail, product, selectedModel);
     } catch (e) {
         console.error('Klaviyo Tracking Failed', e);
     }
 
     return {
         success: true,
-        modelUrl: randomModel,
+        modelUrl: selectedModel,
         taskId: `mock_${Date.now()}`,
         mode: 'mock',
         message: 'Model generated (Mock)'
