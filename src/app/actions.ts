@@ -152,7 +152,7 @@ export async function generate3DModel(productId: string, consumerEmail: string, 
         // Track Intent
         track3DGenerationEvent(consumerEmail, product, "Generating (OpenAI Voxel)...").catch(console.error);
 
-        // 1. Perception Step (Gemini)
+        // 1. Perception Step (Gemini with Metadata)
         // User Request: "Describe the image and product in our own words... make up the data for these"
         console.log(`[Voxel Engine] Analyzing structure with Gemini: ${product.title}`);
         let structuralDescription = "";
@@ -162,13 +162,35 @@ export async function generate3DModel(productId: string, consumerEmail: string, 
             const imageBuffer = await imageResp.arrayBuffer();
             const imageBase64 = Buffer.from(imageBuffer).toString('base64');
 
-            const visionPrompt = `
-            Analyze this product image for 3D reconstruction.
-            Describe the physical structure in detail, breaking it down into simple geometric shapes (cylinders, boxes, spheres).
-            Mention relative positions, colors, and proportions.
-            Example: "A chair with 4 thin cylindrical legs, a square thick seat cushion, and a curved rectangular backrest."
+            // Build rich context from product metadata
+            const metadataContext = product.metadata ? `
             
-            Be precise and technical.
+PRODUCT SPECIFICATIONS:
+- Title: ${product.title}
+- Materials: ${product.metadata.materials?.join(', ') || 'Unknown'}
+- Dimensions: ${product.metadata.dimensions ? `${product.metadata.dimensions.width} x ${product.metadata.dimensions.height} x ${product.metadata.dimensions.depth}` : 'Unknown'}
+- Key Features: ${product.metadata.keyFeatures?.join('; ') || 'Unknown'}
+- Design Style: ${product.metadata.designStyle || 'Unknown'}
+- Color Palette: ${product.metadata.colorPalette?.join(', ') || 'Unknown'}
+            ` : '';
+
+            const visionPrompt = `
+            Analyze this product image for precise 3D reconstruction.
+            ${metadataContext}
+            
+            Using the image and specifications above, describe the physical structure in EXTREME DETAIL:
+            - Break down each component into geometric primitives (cylinders, boxes, spheres, cones)
+            - Specify exact positions, sizes, and rotations
+            - Mention materials, textures, and colors for each part
+            - Describe how components connect and relate to each other
+            
+            Example format:
+            "A modern office chair with 4 thin cylindrical legs (diameter 1.5in, height 16in, positioned at corners of 20in square base). 
+            The seat is a contoured rectangular box (24in x 22in x 3in thick) in molded dark plastic (#2C2C2C). 
+            The backrest is a curved mesh panel (width 18in, height 19in, curvature radius 24in) in gray fabric (#D4D4D4), 
+            supported by an aluminum frame..."
+            
+            Be extremely precise and technical. This will guide a 3D reconstruction engine.
             `;
 
             const result = await model.generateContent([
@@ -176,7 +198,7 @@ export async function generate3DModel(productId: string, consumerEmail: string, 
                 { inlineData: { data: imageBase64, mimeType: "image/jpeg" } }
             ]);
             structuralDescription = result.response.text();
-            console.log(`[Voxel Engine] Gemini Analysis: ${structuralDescription.slice(0, 100)}...`);
+            console.log(`[Voxel Engine] Gemini Analysis: ${structuralDescription.slice(0, 150)}...`);
         } catch (e) {
             console.error("Gemini Vision failed, falling back to direct generation", e);
         }

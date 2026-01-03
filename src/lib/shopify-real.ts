@@ -24,7 +24,8 @@ export async function fetchRealShopifyProducts(domain: string, token: string) {
             description: p.body_html?.replace(/<[^>]*>?/gm, '') || p.title, // Strip HTML
             images: p.images.map((img: any) => img.src),
             price: p.variants?.[0]?.price || '0.00',
-            vendor: p.vendor
+            vendor: p.vendor,
+            metadata: undefined // Real products don't have metadata yet (would fetch from Klaviyo in production)
         }));
 
     } catch (error) {
@@ -55,7 +56,8 @@ export async function fetchRealShopifyProduct(domain: string, token: string, id:
             description: p.body_html?.replace(/<[^>]*>?/gm, '') || p.title,
             images: p.images.map((img: any) => img.src),
             price: p.variants?.[0]?.price || '0.00',
-            vendor: p.vendor
+            vendor: p.vendor,
+            metadata: undefined // Would fetch from Klaviyo in production
         };
 
     } catch (error) {
