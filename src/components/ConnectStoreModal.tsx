@@ -62,7 +62,7 @@ export default function ConnectStoreModal({ isOpen, onClose, onConnect }: Connec
                                 placeholder="brand-name.myshopify.com"
                                 value={domain}
                                 onChange={(e) => setDomain(e.target.value)}
-                                className="input pl-9"
+                                className="input !pl-10"
                                 required
                             />
                         </div>
@@ -78,7 +78,7 @@ export default function ConnectStoreModal({ isOpen, onClose, onConnect }: Connec
                                     placeholder="shpat_xxxxxxxxxxxxxxxx"
                                     value={token === 'manual' ? '' : token}
                                     onChange={(e) => setToken(e.target.value)}
-                                    className="input pl-9"
+                                    className="input !pl-10"
                                     required={token !== 'manual'}
                                 />
                             </div>
