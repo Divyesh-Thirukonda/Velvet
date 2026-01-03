@@ -22,15 +22,23 @@ Built for speed, stability, and "Clean Industrial" aesthetics.
 -   **Frontend**: **Next.js 16** (App Router, Turbopack) with **Tailwind CSS v4**.
 -   **3D Rendering**: Hybrid approach using **React Three Fiber (R3F)** for voxels and **`<model-viewer>`** for high-fidelity glTF/GLB assets.
 -   **Backend**: 100% Server Actions for type safety and security.
--   **Auth**: Custom **Shopify OAuth 2.0** flow with permanent token exchange.
+-   **Auth**: Custom **OAuth 2.0** flows for both **Shopify** and **Klaviyo**.
 
 ## Logic Modes
 -   **Real Mode**: Uses live Shopify Admin API and Klaviyo APIs. Requires valid credentials.
 -   **Demo Mode**: A robust fallback simulation using high-quality local GLB assets (Chair, Lamp, Headphones) to demonstrate the full UX without external dependencies.
 
-## Klaviyo Integration
-Velvet uses the **Klaviyo Track API** to structure data for advanced segmentation.
+## Key Features
 
+### 🔌 Seamless Integration
+-   **Shopify OAuth**: "On-click" store connection with permanent token exchange.
+-   **Klaviyo Connect**: Integrated OAuth flow to link marketing accounts without manual API key pasting.
+
+### 🧠 Generative 3D
+-   **Voxel Engine**: Generates abstract structural models using OpenAI.
+-   **Gemini Vision**: High-fidelity metadata extraction (Material, Dimensions, Style).
+
+### 📧 Retargeting Engine
 -   **Event: `Generated 3D Model`**:
     -   **Payload**: `$value` (Price), `ModelURL`, `GenerationEngine`, `VoxelResolution`.
     -   **Use Case**: Segment "High Intent" merchants or users.
@@ -54,11 +62,11 @@ Create a `.env.local` file:
 OPENAI_API_KEY=sk-...
 GEMINI_API_KEY=AIza...
 
-# Klaviyo Integration
-KLAVIYO_PRIVATE_KEY=pk_...
+# Klaviyo Integration (Optional Fallback)
 NEXT_PUBLIC_KLAVIYO_PUBLIC_KEY=pk_...
+# Note: Private key logic now favors OAuth tokens over static env vars
 
-# Shopify (Optional - for OAuth)
+# Shopify (Required for Real OAuth)
 SHOPIFY_API_KEY=...
 SHOPIFY_API_SECRET=...
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -71,12 +79,13 @@ npm run dev
 Visit `http://localhost:3000`.
 
 ## Demo Walkthrough
-1.  **Dashboard**: Connect a store or enjoy the pre-loaded Demo Preview.
-2.  **Product Page**: Select a product (e.g., Ergonomic Chair).
-3.  **Generate**: Click **"Generate 3D Model"**. The AI pipeline (Gemini + OpenAI) creates the asset.
+1.  **Dashboard**: Click **"Connect Store"** to link your Shopify store.
+2.  **Integrations**: Within the same modal, click **"Connect Klaviyo"** to authorize marketing access.
+3.  **Product Page**: Select a product (e.g., Ergonomic Chair).
+4.  **Generate**: Click **"Generate 3D Model"**. The AI pipeline (Gemini + OpenAI) creates the asset.
     -   *Note: In Demo Mode, this loads a high-quality local GLB file.*
-4.  **Publish**: Sync the asset to Shopify Metafields.
-5.  **Campaign**: Select a segment (e.g., "VIP Loyalty") and click **"Send to Segment"** to trigger the Klaviyo flow.
+5.  **Publish**: Sync the asset to Shopify Metafields.
+6.  **Campaign**: Select a segment (e.g., "VIP Loyalty") and click **"Send to Segment"** to trigger the Klaviyo flow.
 
 ## Future Roadmap
 -   **True AR in Email**: Direct `<model-viewer>` support in email clients (as standards evolve).
