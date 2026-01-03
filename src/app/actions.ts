@@ -26,7 +26,8 @@ const openai = new OpenAI({
 });
 
 // User provided Key for Gemini
-const GEMINI_API_KEY = 'AIzaSyD12b1jFzo7uso0Vz3EN7gKnlHyi1DltdY';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+if (!GEMINI_API_KEY) console.warn("GEMINI_API_KEY is not set.");
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 export async function generateVariantImage(productId: string, consumerEmail: string, variantPrompt: string): Promise<{ success: boolean; imageUrl?: string; message: string }> {
