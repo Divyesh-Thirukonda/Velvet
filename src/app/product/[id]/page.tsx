@@ -46,7 +46,12 @@ export default function ProductPage() {
         if (!product) return;
         setStatus('generating');
         try {
-            const result = await generate3DModel(product.id, 'system-init', 'real');
+            // Determine Mode: If ID is 'prod_...', it's a demo product -> Use Mock Mode
+            // Otherwise, it's a real Shopify product -> Use Real Mode
+            const isMockProduct = product.id.startsWith('prod_');
+            const mode = isMockProduct ? 'mock' : 'real';
+
+            const result = await generate3DModel(product.id, 'system-init', mode);
             if (result.success && result.voxelData) {
                 setVoxelData(result.voxelData);
                 setStatus('complete');
