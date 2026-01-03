@@ -114,16 +114,12 @@ export default function ProductPage() {
                             </div>
                         ) : isMock ? (
                             <div className="w-full h-full bg-[#111]">
-                                {/* @ts-ignore */}
-                                <model-viewer
-                                    src={mockModelUrl}
-                                    poster={product.images[0]}
-                                    camera-controls
-                                    auto-rotate
-                                    shadow-intensity="1"
-                                    camera-orbit="45deg 55deg 2.5m"
-                                    field-of-view="30deg"
-                                    style={{ width: '100%', height: '100%' }}
+                                <iframe
+                                    src={mockModelUrl || ''}
+                                    title="3D Model Viewer"
+                                    frameBorder="0"
+                                    allow="autoplay; fullscreen; xr-spatial-tracking"
+                                    style={{ width: '100%', height: '100%', minHeight: '400px' }}
                                 />
                             </div>
                         ) : status === 'failed' ? (
