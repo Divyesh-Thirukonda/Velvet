@@ -7,11 +7,13 @@ import { OrbitControls, Stage } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface PrimitiveData {
-    type: 'box' | 'sphere' | 'cylinder';
+    type: 'box' | 'sphere' | 'cylinder' | 'cone' | 'torus' | 'capsule';
     position: [number, number, number];
     rotation: [number, number, number];
     scale: [number, number, number];
     color: string;
+    radius?: number;
+    tube?: number;
 }
 
 interface Props {
@@ -19,7 +21,7 @@ interface Props {
 }
 
 function Geometry({ item }: { item: PrimitiveData }) {
-    const { type, position, rotation, scale, color } = item;
+    const { type, position, rotation, scale, color, radius, tube } = item;
 
     // Convert standard arrays to THREE vectors/eulers if needed, 
     // but R3F accepts arrays [x,y,z] naturally for pos/rot/scale props.
@@ -29,6 +31,9 @@ function Geometry({ item }: { item: PrimitiveData }) {
             {type === 'box' && <boxGeometry />}
             {type === 'sphere' && <sphereGeometry />}
             {type === 'cylinder' && <cylinderGeometry />}
+            {type === 'cone' && <coneGeometry args={[0.5, 1, 16]} />}
+            {type === 'capsule' && <capsuleGeometry args={[0.5, 1, 8, 16]} />}
+            {type === 'torus' && <torusGeometry args={[radius || 0.5, tube || 0.1, 16, 32]} />}
             <meshStandardMaterial color={color} roughness={0.3} metalness={0.1} />
         </mesh>
     );

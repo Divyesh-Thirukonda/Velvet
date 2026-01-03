@@ -11,11 +11,13 @@ import VoxelRenderer from '@/components/VoxelRenderer';
 
 // Type from lib/openai
 interface PrimitiveData {
-    type: 'box' | 'sphere' | 'cylinder';
+    type: 'box' | 'sphere' | 'cylinder' | 'cone' | 'torus' | 'capsule';
     position: [number, number, number];
     rotation: [number, number, number];
     scale: [number, number, number];
     color: string;
+    radius?: number;
+    tube?: number;
 }
 
 export default function DemoProductPage() {
