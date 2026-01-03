@@ -46,7 +46,7 @@ export default function ProductPage() {
         if (!product) return;
         setStatus('generating');
         try {
-            const result = await generate3DModel(product.id, 'system-init', 'real');
+            const result = await generate3DModel(product.id, 'system-init');
             if (result.success && result.voxelData) {
                 setVoxelData(result.voxelData);
                 setStatus('complete');

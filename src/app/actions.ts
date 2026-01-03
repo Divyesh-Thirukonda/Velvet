@@ -8,19 +8,7 @@ import { track3DGenerationEvent, triggerCampaignEvent } from '@/lib/klaviyo';
 import { getShopifyProductById } from '@/lib/shopify';
 import { generateGeometryFromImage, Primitive } from '@/lib/openai';
 
-// Mock list of 3D models to return
-const MOCK_MODELS = [
-    'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
-    'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb',
-    'https://modelviewer.dev/shared-assets/models/Horse.glb'
-];
-
-export async function checkGenerationStatus(taskId: string) {
-    if (taskId.startsWith('mock_')) {
-        return { status: 'SUCCEEDED', progress: 100, modelUrl: MOCK_MODELS[0] };
-    }
-    return { status: 'FAILED', progress: 0 };
-}
+// Real-only actions
 
 interface GenerationResult {
     success: boolean;
@@ -117,11 +105,9 @@ export async function publishToStore(productId: string, modelUrl: string) {
         }
     }
 
-    // MOCK MODE
-    await new Promise(resolve => setTimeout(resolve, 1500));
     return {
-        success: true,
-        message: '3D Model published (Simulation Mode - Connect Store for Real)'
+        success: false,
+        message: 'No store connected. Please connect a Shopify store to publish.'
     };
 }
 
