@@ -36,8 +36,7 @@ export default async function DashboardPage() {
             </>
           ) : (
             <>
-              <Zap className="w-3 h-3 fill-current" />
-              <span>Velvet Engine v1.0 Active (Demo Mode)</span>
+              <span>Velvet Engine (Demo Preview)</span>
             </>
           )}
         </div>
@@ -97,6 +96,6 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </div>
-    </div>
+    </div >
   );
 }

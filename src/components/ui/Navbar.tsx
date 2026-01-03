@@ -8,7 +8,7 @@ import { useState } from 'react';
 import ConnectStoreModal from '../ConnectStoreModal';
 import { saveShopifyConfig, disconnectStore } from '@/app/actions';
 
-export default function Navbar() {
+export default function Navbar({ isConnected }: { isConnected: boolean }) {
     const pathname = usePathname();
     const router = useRouter();
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,20 +43,24 @@ export default function Navbar() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="btn btn-primary h-8 text-xs"
+                        className="btn btn-primary h-9 px-4 text-xs font-medium"
                     >
-                        <Plus className="w-3.5 h-3.5 mr-1" /> Connect Store
+                        <Plus className="w-3.5 h-3.5 mr-1.5" />
+                        {isConnected ? 'Switch Store' : 'Connect Store'}
                     </button>
-                    <button
-                        onClick={handleDisconnect}
-                        className="btn h-8 text-xs bg-[#111] hover:bg-red-900/20 text-muted-foreground hover:text-red-500 border border-[#333]"
-                        title="Disconnect Store"
-                    >
-                        <LogOut className="w-3.5 h-3.5" />
-                    </button>
+
+                    {isConnected && (
+                        <button
+                            onClick={handleDisconnect}
+                            className="btn h-9 px-3 text-xs bg-[#111] hover:bg-red-900/20 text-muted-foreground hover:text-red-500 border border-[#333]"
+                            title="Disconnect Store"
+                        >
+                            <LogOut className="w-3.5 h-3.5" />
+                        </button>
+                    )}
                 </div>
 
                 <ConnectStoreModal
