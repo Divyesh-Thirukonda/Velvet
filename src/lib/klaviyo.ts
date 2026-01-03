@@ -229,9 +229,9 @@ export async function trackVariantGeneration(email: string, product: any, varian
             method: 'POST',
             headers: {
                 'Authorization': `Klaviyo-API-Key ${KLAVIYO_PRIVATE_KEY}`,
-                'revision': '2024-02-15',
-                'accept': 'application/json',
-                'content-type': 'application/json'
+                'revision': KLAVIYO_REVISION,
+                'accept': 'application/vnd.api+json',
+                'content-type': 'application/vnd.api+json'
             },
             body: JSON.stringify(payload)
         });
