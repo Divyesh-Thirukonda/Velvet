@@ -22,7 +22,7 @@ const DEMO_PRODUCTS: Product[] = [
     id: 'prod_002',
     title: 'Minimalist Desk Lamp',
     description: 'A touch-sensitive LED lamp with adjustable brightness and color temperature. Perfect for late-night work sessions.',
-    images: ['https://images.unsplash.com/photo-1534073828943-f801091a7d58?auto=format&fit=crop&q=80&w=600'],
+    images: ['https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?auto=format&fit=crop&q=80&w=600'],
     price: '89.00',
     vendor: 'Lumina'
   },
