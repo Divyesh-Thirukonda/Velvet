@@ -40,15 +40,15 @@ Velvet uses the **Klaviyo Track API** deeply to power its core value proposition
 ## Getting Started / Setup Instructions
 
 ### 1. Clone & Install
-\`\`\`bash
+```bash
 git clone https://github.com/Divyesh-Thirukonda/Velvet.git
 cd Velvet
 npm install
-\`\`\`
+```
 
 ### 2. Environment Variables
 Create a \`.env.local\` file in the root directory:
-\`\`\`bash
+```bash
 # Core Keys
 OPENAI_API_KEY=sk-proj-...
 KLAVIYO_PRIVATE_KEY=pk_...
@@ -58,12 +58,12 @@ NEXT_PUBLIC_KLAVIYO_PUBLIC_KEY=pk_...
 SHOPIFY_API_KEY=your_partner_api_key
 SHOPIFY_API_SECRET=your_partner_secret
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-\`\`\`
+```
 
 ### 3. Run Locally
-\`\`\`bash
+```bash
 npm run dev
-\`\`\`
+```
 Visit \`http://localhost:3000\`.
 
 ### 4. Connect Store
