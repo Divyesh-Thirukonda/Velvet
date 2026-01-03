@@ -24,7 +24,7 @@ const DEMO_PRODUCTS: Product[] = [
     id: 'prod_001',
     title: 'Ergonomic Aero Chair',
     description: 'The ultimate in comfort and style. Breathable mesh back, adjustable lumbar support, and sleek aluminum finish.',
-    images: ['https://images.unsplash.com/photo-1592078615290-033ee584e267?auto=format&fit=crop&q=80&w=600'],
+    images: ['/chair-3d.png'],
     price: '299.00',
     vendor: 'AeroLine',
     metadata: {
@@ -45,7 +45,7 @@ const DEMO_PRODUCTS: Product[] = [
     id: 'prod_002',
     title: 'Minimalist Desk Lamp',
     description: 'A touch-sensitive LED lamp with adjustable brightness and color temperature. Perfect for late-night work sessions.',
-    images: ['https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?auto=format&fit=crop&q=80&w=600'],
+    images: ['/lamp-3d.png'],
     price: '89.00',
     vendor: 'Lumina',
     metadata: {
@@ -65,7 +65,7 @@ const DEMO_PRODUCTS: Product[] = [
     id: 'prod_003',
     title: 'Sonic Noise-Canceling Headphones',
     description: 'Immerse yourself in music with our industry-leading noise cancellation technology. 30-hour battery life.',
-    images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=600'],
+    images: ['/headphones-3d.png'],
     price: '199.00',
     vendor: 'SonicAudio',
     metadata: {
