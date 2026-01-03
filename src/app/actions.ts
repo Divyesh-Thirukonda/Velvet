@@ -114,3 +114,17 @@ export async function sendCampaignAction(productId: string, segment: string, ema
         return { success: false, message: 'Failed to trigger campaign' };
     }
 }
+
+export async function saveShopifyConfig(domain: string, token: string) {
+    const cookieStore = await cookies();
+    cookieStore.set('shopify_domain', domain);
+    cookieStore.set('shopify_token', token);
+    return { success: true };
+}
+
+export async function disconnectStore() {
+    const cookieStore = await cookies();
+    cookieStore.delete('shopify_domain');
+    cookieStore.delete('shopify_token');
+    return { success: true };
+}
