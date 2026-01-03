@@ -43,7 +43,13 @@ export async function generateVariantImage(productId: string, consumerEmail: str
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         // Fetch user image to pass to Gemini
-        const imageResp = await fetch(originalImage);
+        let imageUrl = originalImage;
+        if (imageUrl.startsWith('/')) {
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+            imageUrl = `${baseUrl}${imageUrl}`;
+        }
+
+        const imageResp = await fetch(imageUrl);
         const imageBuffer = await imageResp.arrayBuffer();
         const imageBase64 = Buffer.from(imageBuffer).toString('base64');
 
