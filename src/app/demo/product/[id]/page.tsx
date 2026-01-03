@@ -1,28 +1,17 @@
-// src/app/product/[id]/page.tsx
+// src/app/demo/product/[id]/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, CheckCircle2, Box, Send, AlertTriangle, Globe, Mail, Users } from 'lucide-react';
-import { generate3DModel, publishToStore, sendCampaignAction } from '@/app/actions';
+import { ArrowLeft, Loader2, CheckCircle2, Box, Send, AlertTriangle, Globe, Mail, Users, Zap } from 'lucide-react';
+import { generate3DModel, publishToStore } from '@/app/actions';
 import { Product, getShopifyProducts } from '@/lib/shopify';
-import VoxelRenderer from '@/components/VoxelRenderer';
 
-// Type from lib/openai
-interface PrimitiveData {
-    type: 'box' | 'sphere' | 'cylinder';
-    position: [number, number, number];
-    rotation: [number, number, number];
-    scale: [number, number, number];
-    color: string;
-}
-
-export default function ProductPage() {
+export default function DemoProductPage() {
     const params = useParams();
     const [product, setProduct] = useState<Product | null>(null);
     const [status, setStatus] = useState<'idle' | 'generating' | 'complete' | 'failed'>('idle');
-    const [voxelData, setVoxelData] = useState<PrimitiveData[] | null>(null);
     const [mockModelUrl, setMockModelUrl] = useState<string | null>(null);
 
     // Publishing State
@@ -46,11 +35,9 @@ export default function ProductPage() {
         if (!product) return;
         setStatus('generating');
         try {
-            const result = await generate3DModel(product.id, 'system-init', 'real');
-            if (result.success && result.voxelData) {
-                setVoxelData(result.voxelData);
-                setStatus('complete');
-            } else if (result.success && result.modelUrl) {
+            // Force mock mode
+            const result = await generate3DModel(product.id, 'demo-user', 'mock');
+            if (result.success && result.modelUrl) {
                 setMockModelUrl(result.modelUrl);
                 setStatus('complete');
             } else {
@@ -65,27 +52,21 @@ export default function ProductPage() {
     const handlePublish = async () => {
         if (!product) return;
         setIsPublishing(true);
-        // Simulate publishing
-        await publishToStore(product.id, 'voxel-asset-url');
+        await publishToStore(product.id, 'mock-asset-url');
         setIsPublishing(false);
         setIsPublished(true);
     };
 
     const handleSendCampaign = async () => {
         setIsSending(true);
-        const emailTarget = customEmail || 'divyesh.thirukonda@gmail.com'; // Default for demo if empty
-        const urlToShare = mockModelUrl || 'https://velvet.app/view/voxel-demo'; // Fallback
-
-        await sendCampaignAction(product!.id, targetSegment, emailTarget, urlToShare);
-
+        // Simulate sending
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await generate3DModel(product!.id, customEmail || 'demo-segment', 'mock');
         setIsSending(false);
         setIsSent(true);
     };
 
-    if (!product) return <div className="text-center py-20 text-muted-foreground">Loading...</div>;
-
-    const isVoxel = status === 'complete' && voxelData;
-    const isMock = status === 'complete' && mockModelUrl;
+    if (!product) return <div className="text-center py-20 text-muted-foreground">Loading Demo...</div>;
 
     return (
         <div className="max-w-6xl mx-auto py-8">
@@ -97,14 +78,19 @@ export default function ProductPage() {
 
                 {/* 1. VISUAL COLUMN (Left) */}
                 <div className="w-full md:w-3/5 space-y-4">
-                    <div className="aspect-[4/3] bg-[#111] border border-[#333] rounded-lg overflow-hidden relative">
-                        {isVoxel ? (
-                            <div className="w-full h-full">
-                                <VoxelRenderer key={JSON.stringify(voxelData)} data={voxelData || []} />
-                            </div>
-                        ) : isMock ? (
-                            <div className="w-full h-full flex items-center justify-center bg-black/50">
-                                <Box className="w-16 h-16 text-white" />
+                    <div className="aspect-[4/3] bg-[#111] border border-[#333] rounded-lg overflow-hidden relative group">
+                        <div className="absolute top-4 left-4 z-20 px-2 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded text-xs font-mono font-bold flex items-center gap-2">
+                            <Zap className="w-3 h-3 fill-current" /> DEMO MODE
+                        </div>
+
+                        {status === 'complete' ? (
+                            <div className="w-full h-full flex items-center justify-center bg-black/20">
+                                <div className="text-center space-y-4 animate-in fade-in zoom-in duration-500">
+                                    <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                                        <Box className="w-10 h-10 text-white" />
+                                    </div>
+                                    <p className="text-white font-medium">Interactive 3D Ready (Mock)</p>
+                                </div>
                             </div>
                         ) : status === 'failed' ? (
                             <div className="w-full h-full flex items-center justify-center text-red-500">
@@ -115,7 +101,7 @@ export default function ProductPage() {
                             <img
                                 src={product.images[0]}
                                 alt={product.title}
-                                className={`w-full h-full object-cover ${status === 'generating' ? 'opacity-50 blur-sm' : ''}`}
+                                className={`w-full h-full object-cover ${status === 'generating' ? 'opacity-50 blur-sm scale-110' : ''} transition-all duration-700`}
                             />
                         )}
 
@@ -123,8 +109,8 @@ export default function ProductPage() {
                         {status === 'generating' && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
                                 <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
-                                <p className="text-sm font-medium">Reconstructing Geometry...</p>
-                                <p className="text-xs text-muted-foreground">GPT-4o Vision Processing</p>
+                                <p className="text-sm font-medium">Simulating Voxelization...</p>
+                                <p className="text-xs text-muted-foreground">Instant Demo</p>
                             </div>
                         )}
                     </div>
@@ -141,15 +127,15 @@ export default function ProductPage() {
                         <div className="p-6 border border-[#333] rounded-lg bg-[#0a0a0a]">
                             <h3 className="font-semibold mb-4">Step 1: Generate Asset</h3>
                             <p className="text-xs text-muted-foreground mb-4">
-                                Create a 3D Voxel representation using OpenAI Vision.
+                                Create a 3D Voxel representation (Simulated).
                             </p>
                             <button
                                 onClick={handleGenerate}
                                 disabled={status === 'generating'}
-                                className="btn btn-primary w-full gap-2"
+                                className="btn btn-primary w-full gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
                             >
                                 <Box className="w-4 h-4" />
-                                {status === 'generating' ? 'Analyzing...' : 'Generate 3D Model'}
+                                {status === 'generating' ? 'Processing...' : 'Instant Generate'}
                             </button>
                         </div>
                     ) : (
@@ -162,7 +148,7 @@ export default function ProductPage() {
                                     <h3 className="font-semibold text-sm">Step 2: Storefront</h3>
                                 </div>
                                 <p className="text-xs text-muted-foreground mb-4">
-                                    Publish this asset to Shopify Product Metafields for AR viewing.
+                                    Publish this asset to Shopify Product Metafields.
                                 </p>
                                 <button
                                     onClick={handlePublish}

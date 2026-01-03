@@ -10,6 +10,13 @@ import { generateGeometryFromImage, Primitive } from '@/lib/openai';
 
 // Real-only actions
 
+// Mock list of 3D models to return
+const MOCK_MODELS = [
+    'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+    'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb',
+    'https://modelviewer.dev/shared-assets/models/Horse.glb'
+];
+
 interface GenerationResult {
     success: boolean;
     mode: 'real' | 'mock';
@@ -40,13 +47,12 @@ async function getProductHelper(productId: string, allowMock: boolean = false) {
     return null;
 }
 
-export async function generate3DModel(productId: string, consumerEmail: string): Promise<GenerationResult> {
-    // 1. Fetch Product Data (Strict Real)
-    const product = await getProductHelper(productId, false);
-
-    if (!product) {
-        throw new Error('Product not found in connected store. Please connect a Shopify store.');
-    }
+export async function generate3DModel(productId: string, consumerEmail: string, mode: 'real' | 'mock' = 'mock'): Promise<GenerationResult> {
+    // 1. Fetch Product Data (STRICT: Real mode = No Mock Fallback)
+    const product = await getProductHelper(productId, mode === 'mock');
+    if (!product) throw new Error(mode === 'real'
+        ? 'Product not found in connected store. (Real Mode Active)'
+        : 'Product not found');
 
     // OPENAI VOXEL ENGINE
     const startTime = Date.now();
@@ -87,9 +93,11 @@ export async function publishToStore(productId: string, modelUrl: string) {
         }
     }
 
+    // MOCK MODE
+    await new Promise(resolve => setTimeout(resolve, 1500));
     return {
-        success: false,
-        message: 'No store connected. Please connect a Shopify store to publish.'
+        success: true,
+        message: '3D Model published (Simulation Mode - Connect Store for Real)'
     };
 }
 
