@@ -83,7 +83,7 @@ export default function ConnectStoreModal({ isOpen, onClose, onConnect }: Connec
                                 />
                             </div>
                             <p className="text-[10px] text-muted-foreground">
-                                Settings → Apps → Develop apps → API Credentials
+                                Settings -{'>'} Apps -{'>'} Develop apps -{'>'} API Credentials
                             </p>
                         </div>
                     )}
