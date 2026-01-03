@@ -231,18 +231,18 @@ PRODUCT SPECIFICATIONS:
     const lowerTitle = product.title.toLowerCase();
     let selectedModel = RELEVANT_MODELS['default'];
 
-    // Return high-quality Sketchfab models for all demo products
+    // Return high-quality local GLB models for all demo products
     if (lowerTitle.includes('chair')) {
-        selectedModel = 'https://sketchfab.com/models/cd5ef0305d8545dd8cd934ebb99cf7d5/embed';
-        console.log('[Mock Mode] Returning realistic Sketchfab ergonomic chair');
+        selectedModel = '/models/chair.glb';
+        console.log('[Mock Mode] Returning local GLB chair model');
     }
     else if (lowerTitle.includes('lamp')) {
-        selectedModel = 'https://sketchfab.com/models/f5d4eb4b1fb74a2f99b9b68e4029aba2/embed';
-        console.log('[Mock Mode] Returning realistic Sketchfab desk lamp');
+        selectedModel = '/models/lamp.glb';
+        console.log('[Mock Mode] Returning local GLB lamp model');
     }
     else if (lowerTitle.includes('headphones')) {
-        selectedModel = 'https://sketchfab.com/models/b4dd9b5ea7d3470c9eb70a345cecae07/embed';
-        console.log('[Mock Mode] Returning realistic Sketchfab headphones');
+        selectedModel = '/models/headphones.glb';
+        console.log('[Mock Mode] Returning local GLB headphones model');
     }
 
     // Fallback if random was desired, but for demo continuity we prefer deterministic
