@@ -48,8 +48,8 @@ export default function ProductPage() {
         if (!product) return;
         setStatus('generating');
         try {
-            // Always use Real Voxel Generation (Source of data is handled by backend)
-            const result = await generate3DModel(product.id, 'system-init', 'real');
+            // Use mock mode with realistic Sketchfab models
+            const result = await generate3DModel(product.id, 'system-init', 'mock');
             if (result.success && result.voxelData) {
                 setVoxelData(result.voxelData);
                 setStatus('complete');
