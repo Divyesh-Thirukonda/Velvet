@@ -223,14 +223,19 @@ PRODUCT SPECIFICATIONS:
         };
     }
 
-    // --- Mock Flow ---
+    // --- Mock Flow (Demo Mode) ---
+    console.log(`[Mock Mode] Simulating 3D generation for: ${product.title}`);
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     // Deterministic Selection based on Product Title
     const lowerTitle = product.title.toLowerCase();
     let selectedModel = RELEVANT_MODELS['default'];
 
-    if (lowerTitle.includes('chair')) selectedModel = RELEVANT_MODELS['chair'];
+    // For chair products, return realistic Sketchfab embed
+    if (lowerTitle.includes('chair')) {
+        selectedModel = 'https://sketchfab.com/models/cd5ef0305d8545dd8cd934ebb99cf7d5/embed';
+        console.log('[Mock Mode] Returning realistic Sketchfab chair model');
+    }
     else if (lowerTitle.includes('lamp')) selectedModel = RELEVANT_MODELS['lamp'];
     else if (lowerTitle.includes('headphones')) selectedModel = RELEVANT_MODELS['headphones'];
 
