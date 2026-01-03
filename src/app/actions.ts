@@ -58,11 +58,17 @@ async function getProductHelper(productId: string, allowMock: boolean = false) {
 }
 
 export async function generate3DModel(productId: string, consumerEmail: string, mode: 'real' | 'mock' = 'mock'): Promise<GenerationResult> {
-    // 1. Fetch Product Data (STRICT: Real mode = No Mock Fallback)
-    const product = await getProductHelper(productId, mode === 'mock');
-    if (!product) throw new Error(mode === 'real'
-        ? 'Product not found in connected store. (Real Mode Active)'
-        : 'Product not found');
+    // 1. Fetch Product Data
+    // We allow mock data if mode is 'mock' OR if it's a specific 'prod_' demo ID being run in 'real' mode.
+    const isDemoId = productId.startsWith('prod_');
+    const allowMockData = mode === 'mock' || isDemoId;
+
+    const product = await getProductHelper(productId, allowMockData);
+
+    // Strict check: If we are in real mode and NOT a demo ID, we must have a Real Product.
+    if (!product) {
+        throw new Error('Product not found.');
+    }
 
     if (mode === 'real') {
         // OPENAI VOXEL ENGINE

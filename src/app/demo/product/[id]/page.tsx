@@ -7,11 +7,22 @@ import Link from 'next/link';
 import { ArrowLeft, Loader2, CheckCircle2, Box, Send, AlertTriangle, Globe, Mail, Users, Zap } from 'lucide-react';
 import { generate3DModel, publishToStore } from '@/app/actions';
 import { Product, getShopifyProducts } from '@/lib/shopify';
+import VoxelRenderer from '@/components/VoxelRenderer';
+
+// Type from lib/openai
+interface PrimitiveData {
+    type: 'box' | 'sphere' | 'cylinder';
+    position: [number, number, number];
+    rotation: [number, number, number];
+    scale: [number, number, number];
+    color: string;
+}
 
 export default function DemoProductPage() {
     const params = useParams();
     const [product, setProduct] = useState<Product | null>(null);
     const [status, setStatus] = useState<'idle' | 'generating' | 'complete' | 'failed'>('idle');
+    const [voxelData, setVoxelData] = useState<PrimitiveData[] | null>(null);
     const [mockModelUrl, setMockModelUrl] = useState<string | null>(null);
 
     // Publishing State
@@ -35,9 +46,14 @@ export default function DemoProductPage() {
         if (!product) return;
         setStatus('generating');
         try {
-            // Force mock mode
-            const result = await generate3DModel(product.id, 'demo-user', 'mock');
-            if (result.success && result.modelUrl) {
+            // Force REAL mode (Voxel Engine) even for demo
+            const result = await generate3DModel(product.id, 'demo-user', 'real');
+
+            if (result.success && result.voxelData) {
+                setVoxelData(result.voxelData);
+                setStatus('complete');
+            } else if (result.success && result.modelUrl) {
+                // Fallback to mock URL if backend decided to fallback
                 setMockModelUrl(result.modelUrl);
                 setStatus('complete');
             } else {
@@ -93,17 +109,21 @@ export default function DemoProductPage() {
 
                         {status === 'complete' ? (
                             <div className="w-full h-full bg-[#111]">
-                                {/* @ts-ignore */}
-                                <model-viewer
-                                    src={mockModelUrl}
-                                    poster={product.images[0]}
-                                    camera-controls
-                                    auto-rotate
-                                    shadow-intensity="1"
-                                    camera-orbit="45deg 55deg 2.5m"
-                                    field-of-view="30deg"
-                                    style={{ width: '100%', height: '100%' }}
-                                />
+                                {voxelData ? (
+                                    <VoxelRenderer key={JSON.stringify(voxelData)} data={voxelData} />
+                                ) : (
+                                    /* @ts-ignore */
+                                    <model-viewer
+                                        src={mockModelUrl}
+                                        poster={product.images[0]}
+                                        camera-controls
+                                        auto-rotate
+                                        shadow-intensity="1"
+                                        camera-orbit="45deg 55deg 2.5m"
+                                        field-of-view="30deg"
+                                        style={{ width: '100%', height: '100%' }}
+                                    />
+                                )}
                             </div>
                         ) : status === 'failed' ? (
                             <div className="w-full h-full flex items-center justify-center text-red-500">
@@ -122,8 +142,8 @@ export default function DemoProductPage() {
                         {status === 'generating' && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
                                 <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
-                                <p className="text-sm font-medium">Simulating Voxelization...</p>
-                                <p className="text-xs text-muted-foreground">Instant Demo</p>
+                                <p className="text-sm font-medium">Reconstructing Geometry...</p>
+                                <p className="text-xs text-muted-foreground">GPT-4o Vision Processing</p>
                             </div>
                         )}
                     </div>
@@ -214,8 +234,8 @@ export default function DemoProductPage() {
                                     onClick={handleSendCampaign}
                                     disabled={isSent || isSending}
                                     className={`btn w-full gap-2 font-medium transition-all ${isSent
-                                            ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                                            : 'bg-white text-black hover:bg-gray-200 border-transparent'
+                                        ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                        : 'bg-white text-black hover:bg-gray-200 border-transparent'
                                         }`}
                                 >
                                     {isSent ? (

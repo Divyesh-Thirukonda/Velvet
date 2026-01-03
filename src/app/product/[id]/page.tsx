@@ -46,12 +46,8 @@ export default function ProductPage() {
         if (!product) return;
         setStatus('generating');
         try {
-            // Determine Mode: If ID is 'prod_...', it's a demo product -> Use Mock Mode
-            // Otherwise, it's a real Shopify product -> Use Real Mode
-            const isMockProduct = product.id.startsWith('prod_');
-            const mode = isMockProduct ? 'mock' : 'real';
-
-            const result = await generate3DModel(product.id, 'system-init', mode);
+            // Always use Real Voxel Generation (Source of data is handled by backend)
+            const result = await generate3DModel(product.id, 'system-init', 'real');
             if (result.success && result.voxelData) {
                 setVoxelData(result.voxelData);
                 setStatus('complete');
@@ -237,8 +233,8 @@ export default function ProductPage() {
                                     onClick={handleSendCampaign}
                                     disabled={isSent || isSending}
                                     className={`btn w-full gap-2 font-medium transition-all ${isSent
-                                            ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                                            : 'bg-white text-black hover:bg-gray-200 border-transparent'
+                                        ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                        : 'bg-white text-black hover:bg-gray-200 border-transparent'
                                         }`}
                                 >
                                     {isSent ? (
