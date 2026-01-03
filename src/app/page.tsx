@@ -53,7 +53,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {products.map((product) => (
           <Link
-            href={`/product/${product.id}`}
+            href={product.id.startsWith('prod_') ? `/demo/product/${product.id}` : `/product/${product.id}`}
             key={product.id}
             className="group relative block"
           >

@@ -105,9 +105,7 @@ export default function DemoProductPage() {
                 {/* 1. VISUAL COLUMN (Left) */}
                 <div className="w-full md:w-3/5 space-y-4">
                     <div className="aspect-[4/3] bg-[#111] border border-[#333] rounded-lg overflow-hidden relative group">
-                        <div className="absolute top-4 left-4 z-20 px-2 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded text-xs font-mono font-bold flex items-center gap-2">
-                            <Zap className="w-3 h-3 fill-current" /> DEMO MODE
-                        </div>
+
 
                         {status === 'complete' ? (
                             <div className="w-full h-full bg-[#111]">
@@ -278,19 +276,11 @@ export default function DemoProductPage() {
                                             <option className="text-white bg-[#111]">Lost Customers (30 Days)</option>
                                             <option className="text-white bg-[#111]">Cart Abandoners (High Value)</option>
                                             <option className="text-white bg-[#111]">VIP Loyalty Members</option>
-                                            <option className="text-white bg-[#111]">Specific Email (Test)</option>
+
                                         </select>
                                     </div>
 
-                                    {targetSegment === 'Specific Email (Test)' && (
-                                        <input
-                                            type="email"
-                                            placeholder="name@example.com"
-                                            value={customEmail}
-                                            onChange={(e) => setCustomEmail(e.target.value)}
-                                            className="input mt-2"
-                                        />
-                                    )}
+
                                 </div>
 
                                 <button
