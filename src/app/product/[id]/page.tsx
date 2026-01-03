@@ -211,10 +211,10 @@ export default function ProductPage() {
                                             onChange={(e) => setTargetSegment(e.target.value)}
                                             className="w-full bg-[#111] border border-[#333] rounded-md pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white appearance-none"
                                         >
-                                            <option className="text-black">Lost Customers (30 Days)</option>
-                                            <option className="text-black">Cart Abandoners (High Value)</option>
-                                            <option className="text-black">VIP Loyalty Members</option>
-                                            <option className="text-black">Specific Email (Test)</option>
+                                            <option className="text-white bg-[#111]">Lost Customers (30 Days)</option>
+                                            <option className="text-white bg-[#111]">Cart Abandoners (High Value)</option>
+                                            <option className="text-white bg-[#111]">VIP Loyalty Members</option>
+                                            <option className="text-white bg-[#111]">Specific Email (Test)</option>
                                         </select>
                                     </div>
 
