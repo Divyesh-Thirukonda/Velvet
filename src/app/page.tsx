@@ -1,4 +1,4 @@
-import { getShopifyProducts } from '@/lib/shopify';
+import { getShopifyProducts, Product } from '@/lib/shopify';
 import { fetchRealShopifyProducts } from '@/lib/shopify-real';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -9,7 +9,7 @@ export default async function DashboardPage() {
   const shopifyDomain = cookieStore.get('shopify_domain')?.value;
   const shopifyToken = cookieStore.get('shopify_token')?.value;
 
-  let products = [];
+  let products: Product[] = [];
   let isConnected = false;
 
   if (shopifyDomain && shopifyToken) {
