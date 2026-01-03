@@ -55,13 +55,21 @@ export async function generateVariantImage(productId: string, consumerEmail: str
             const imageBase64 = Buffer.from(imageBuffer).toString('base64');
 
             const prompt = `
-            You are a Creative Director. 
-            I need a DALL-E 3 prompt to generate a new product variant.
-            Original Product: See image.
-            User Request: "${variantPrompt}"
-            
-            Output ONLY the detailed prompt text describing the new variant, maintaining the original angle and composition.
-            `;
+        You are a Product Design Expert.
+        I need a DALL-E 3 prompt to create a "Material/Color Variant" of this EXACT product.
+        
+        GOAL: Preserve the original product's shape, geometry, camera angle, and composition 100%. Only change the specific details requested by the user.
+
+        Original Product: See image.
+        User Request: "${variantPrompt}"
+        
+        INSTRUCTIONS:
+        1. Describe the physical structure of the original product in extreme detail (shape of legs, type of backrest, armrest style, specific curves).
+        2. Integrate the User Request into this description (e.g., "The seat material is now [User Request]...").
+        3. End with: "Photorealistic product render, 8k, exact same camera angle and composition as original. White studio background."
+
+        Output ONLY the final DALL-E 3 prompt.
+        `;
 
             const result = await model.generateContent([
                 prompt,
