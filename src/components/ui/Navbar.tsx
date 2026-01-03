@@ -43,10 +43,10 @@ export default function Navbar({ isConnected }: { isConnected: boolean }) {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="btn btn-primary h-9 px-4 text-xs font-medium"
+                        className="btn btn-primary h-9 px-5 text-sm font-medium"
                     >
                         <Plus className="w-3.5 h-3.5 mr-1.5" />
                         {isConnected ? 'Switch Store' : 'Connect Store'}

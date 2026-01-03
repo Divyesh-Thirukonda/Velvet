@@ -18,7 +18,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const cookieStore = await cookies();
-  const isConnected = !!(cookieStore.get('shopify_domain')?.value && cookieStore.get('shopify_token')?.value);
+  const domainCookie = cookieStore.get('shopify_domain')?.value?.trim();
+  const tokenCookie = cookieStore.get('shopify_token')?.value?.trim();
+  const isConnected = Boolean(domainCookie && tokenCookie);
 
   return (
     <html lang="en">
@@ -27,9 +29,9 @@ export default async function RootLayout({
       </head>
       <body className={outfit.className}>
         <Navbar isConnected={isConnected} />
-        <main className="pt-20 min-h-screen relative overflow-hidden">
+        <main className="min-h-screen relative overflow-hidden">
           {/* Background Ambient Glows */}
-          <div className="container py-6">
+          <div className="container py-4">
             {children}
           </div>
         </main>
