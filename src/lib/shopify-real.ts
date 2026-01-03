@@ -33,6 +33,37 @@ export async function fetchRealShopifyProducts(domain: string, token: string) {
     }
 }
 
+export async function fetchRealShopifyProduct(domain: string, token: string, id: string) {
+    const endpoint = `https://${domain}/admin/api/2024-01/products/${id}.json`;
+
+    try {
+        const response = await fetch(endpoint, {
+            headers: {
+                'X-Shopify-Access-Token': token,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) return null;
+
+        const data = await response.json();
+        const p = data.product;
+
+        return {
+            id: String(p.id),
+            title: p.title,
+            description: p.body_html?.replace(/<[^>]*>?/gm, '') || p.title,
+            images: p.images.map((img: any) => img.src),
+            price: p.variants?.[0]?.price || '0.00',
+            vendor: p.vendor
+        };
+
+    } catch (error) {
+        console.error('Failed to fetch real product:', error);
+        return null;
+    }
+}
+
 export async function publishToRealShopifyMetafield(domain: string, token: string, productId: string, modelUrl: string) {
     // 1. We must find the correct Metafield endpoint (Product specific)
     const endpoint = `https://${domain}/admin/api/2024-01/products/${productId}/metafields.json`;

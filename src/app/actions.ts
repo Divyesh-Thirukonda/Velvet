@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 
-import { fetchRealShopifyProducts, publishToRealShopifyMetafield } from '@/lib/shopify-real';
+import { fetchRealShopifyProducts, publishToRealShopifyMetafield, fetchRealShopifyProduct } from '@/lib/shopify-real';
 
 import { track3DGenerationEvent, triggerCampaignEvent } from '@/lib/klaviyo';
 import { getShopifyProductById } from '@/lib/shopify';
@@ -31,9 +31,25 @@ interface GenerationResult {
     taskId?: string;
 }
 
+// Helper to get Product (Real or Mock)
+async function getProductHelper(productId: string) {
+    // 1. Try Real Store First
+    const cookieStore = await cookies();
+    const domain = cookieStore.get('shopify_domain')?.value;
+    const token = cookieStore.get('shopify_token')?.value;
+
+    if (domain && token) {
+        const realProduct = await fetchRealShopifyProduct(domain, token, productId);
+        if (realProduct) return realProduct;
+    }
+
+    // 2. Fallback to Mock
+    return await getShopifyProductById(productId);
+}
+
 export async function generate3DModel(productId: string, consumerEmail: string, mode: 'real' | 'mock' = 'mock'): Promise<GenerationResult> {
     // 1. Fetch Product Data
-    const product = await getShopifyProductById(productId);
+    const product = await getProductHelper(productId);
     if (!product) throw new Error('Product not found');
 
     if (mode === 'real') {
@@ -104,7 +120,8 @@ export async function publishToStore(productId: string, modelUrl: string) {
 
 export async function sendCampaignAction(productId: string, segment: string, email: string, modelUrl: string) {
     // 1. Fetch Product details for the payload
-    const product = await getShopifyProductById(productId);
+    const product = await getProductHelper(productId);
+    if (!product) return { success: false, message: 'Product not found' };
 
     // 2. Trigger Real Klaviyo Event
     try {
