@@ -190,3 +190,53 @@ export async function triggerCampaignEvent(email: string, segment: string, produ
         throw error;
     }
 }
+
+export async function trackVariantGeneration(email: string, product: any, variantPrompt: string, variantImageUrl: string) {
+    if (!email || KLAVIYO_PRIVATE_KEY === 'pk_mock_key') return;
+
+    try {
+        const payload = {
+            data: {
+                type: 'event',
+                attributes: {
+                    profile: {
+                        data: {
+                            type: 'profile',
+                            attributes: { email }
+                        }
+                    },
+                    metric: {
+                        data: {
+                            type: 'metric',
+                            attributes: {
+                                name: 'Generated Product Variant'
+                            }
+                        }
+                    },
+                    properties: {
+                        ProductName: product.title,
+                        ProductId: product.id,
+                        VariantPrompt: variantPrompt,
+                        VariantDescription: `User requested: ${variantPrompt}`,
+                        VariantImage: variantImageUrl,
+                        AI_Engine: 'Gemini + DALL-E 3'
+                    }
+                }
+            }
+        };
+
+        await fetch(`https://a.klaviyo.com/api/events/`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Klaviyo-API-Key ${KLAVIYO_PRIVATE_KEY}`,
+                'revision': '2024-02-15',
+                'accept': 'application/json',
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        console.log(`[Klaviyo] Tracked Variant Generation: ${variantPrompt}`);
+    } catch (error) {
+        console.error('Error tracking Variant Generation:', error);
+    }
+}

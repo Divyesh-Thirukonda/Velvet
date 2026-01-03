@@ -4,7 +4,9 @@ import { cookies } from 'next/headers';
 
 import { fetchRealShopifyProducts, publishToRealShopifyMetafield, fetchRealShopifyProduct } from '@/lib/shopify-real';
 
-import { track3DGenerationEvent, triggerCampaignEvent } from '@/lib/klaviyo';
+import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { track3DGenerationEvent, triggerCampaignEvent, trackVariantGeneration } from '@/lib/klaviyo';
 import { getShopifyProductById } from '@/lib/shopify';
 import { generateGeometryFromImage, Primitive } from '@/lib/openai';
 
@@ -19,11 +21,13 @@ const RELEVANT_MODELS: Record<string, string> = {
     'default': 'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb'
 };
 
-import OpenAI from 'openai';
-
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
+
+// User provided Key for Gemini
+const GEMINI_API_KEY = 'AIzaSyD12b1jFzo7uso0Vz3EN7gKnlHyi1DltdY';
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 export async function generateVariantImage(productId: string, consumerEmail: string, variantPrompt: string): Promise<{ success: boolean; imageUrl?: string; message: string }> {
     // 1. Fetch Product
@@ -33,30 +37,39 @@ export async function generateVariantImage(productId: string, consumerEmail: str
     const originalImage = product.images[0];
 
     try {
-        // 2. Vision Analysis + Prompt Synthesis (GPT-4o)
-        // We ask GPT-4o to look at the image and the user's request, and output a DALL-E 3 prompt.
-        const synthesisResponse = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-                {
-                    role: "system",
-                    content: "You are a Creative Director. Analyze the product image and the user's modification request. Output a detailed DALL-E 3 prompt that recreates the product with the requested changes, maintaining the original angle, lighting, and composition."
+        // 2. Vision Analysis + Prompt Synthesis (Google Gemini)
+        console.log("Analyzing with Gemini 1.5 Flash...");
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        // Fetch user image to pass to Gemini
+        const imageResp = await fetch(originalImage);
+        const imageBuffer = await imageResp.arrayBuffer();
+        const imageBase64 = Buffer.from(imageBuffer).toString('base64');
+
+        const prompt = `
+        You are a Creative Director. 
+        I need a DALL-E 3 prompt to generate a new product variant.
+        Original Product: See image.
+        User Request: "${variantPrompt}"
+        
+        Output ONLY the detailed prompt text describing the new variant, maintaining the original angle and composition.
+        `;
+
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: imageBase64,
+                    mimeType: "image/jpeg",
                 },
-                {
-                    role: "user",
-                    content: [
-                        { type: "text", text: `User Request: "${variantPrompt}"` },
-                        { type: "image_url", image_url: { url: originalImage } }
-                    ]
-                }
-            ],
-            max_tokens: 300
-        });
+            },
+        ]);
 
-        const dallePrompt = synthesisResponse.choices[0].message.content || `A photo of ${product.title}, ${variantPrompt}`;
-        console.log("Generated DALL-E Prompt:", dallePrompt);
+        const dallePrompt = result.response.text();
+        console.log("Gemini Generated Prompt:", dallePrompt);
 
-        // 3. Generate Image (DALL-E 3)
+        // 3. Generate Image (DALL-E 3) 
+        // (Maintaining DALL-E for generation reliability in this environment, driven by Gemini Intelligence)
         const imageResponse = await openai.images.generate({
             model: "dall-e-3",
             prompt: dallePrompt,
@@ -68,7 +81,10 @@ export async function generateVariantImage(productId: string, consumerEmail: str
         const newImageUrl = imageResponse.data?.[0]?.url;
         if (!newImageUrl) throw new Error("No image generated");
 
-        return { success: true, imageUrl: newImageUrl, message: 'Variant Generated' };
+        // 4. Track in Klaviyo (Meaningful API Usage)
+        await trackVariantGeneration(consumerEmail, product, variantPrompt, newImageUrl);
+
+        return { success: true, imageUrl: newImageUrl, message: 'Variant Generated via Gemini' };
 
     } catch (e) {
         console.error("Variant Gen Error:", e);
